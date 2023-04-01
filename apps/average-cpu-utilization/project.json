@@ -57,7 +57,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "docker build -f ./apps/average-cpu-utilization/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=average-cpu-utilization -t polarissloc/average-cpu-utilization:latest ."
+          "docker build -f ./apps/average-cpu-utilization/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=average-cpu-utilization -t stvnkiss/average-cpu-utilization:latest ."
         ],
         "parallel": false
       }

@@ -35,7 +35,7 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - image: polarissloc/multi-elasticity-strategy-controller:latest
+        - image: stvnkiss/multi-elasticity-strategy-controller:latest
           name: elasticity-controller
           resources:
             limits:

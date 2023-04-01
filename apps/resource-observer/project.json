@@ -57,7 +57,7 @@
       "executor": "nx:run-commands",
       "options": {
         "commands": [
-          "docker build -f ./apps/resource-observer/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=resource-observer -t polarissloc/resource-observer:latest ."
+          "docker build -f ./apps/resource-observer/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=resource-observer -t stvnkiss/resource-observer:latest ."
         ],
         "parallel": false
       }

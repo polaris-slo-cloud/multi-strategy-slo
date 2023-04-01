@@ -35,7 +35,7 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - image: polarissloc/average-cpu-utilization:latest
+        - image: stvnkiss/average-cpu-utilization:latest
           name: slo-controller
           resources:
             limits:

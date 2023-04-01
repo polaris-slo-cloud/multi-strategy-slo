@@ -36,7 +36,7 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - image: polarissloc/resource-observer:latest
+        - image: stvnkiss/resource-observer:latest
           name: metrics-controller
           resources:
             limits:
