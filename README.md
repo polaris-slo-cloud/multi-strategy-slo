@@ -35,6 +35,8 @@ Install all CRDs, then apply all manifest files using:
 
 At this points you can deploy your application that is referenced by the SLO mapping.
 
+## Test
+
 In order to test the CPU utilization SLO, I created a simple python image that generates CPU for every HTTP request: https://github.com/stvnkiss/rest-cpu-stress
 
 Create stress deployment:
