@@ -1,0 +1,76 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/average-cpu-utilization/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/average-cpu-utilization",
+        "main": "apps/average-cpu-utilization/src/main.ts",
+        "tsConfig": "apps/average-cpu-utilization/tsconfig.app.json",
+        "assets": ["apps/average-cpu-utilization/src/assets"],
+        "externalDependencies": "none"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/average-cpu-utilization/src/environments/environment.ts",
+              "with": "apps/average-cpu-utilization/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:node",
+      "options": {
+        "buildTarget": "average-cpu-utilization:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "average-cpu-utilization:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/average-cpu-utilization/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/average-cpu-utilization"],
+      "options": {
+        "jestConfig": "apps/average-cpu-utilization/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker build -f ./apps/average-cpu-utilization/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=average-cpu-utilization -t polarissloc/average-cpu-utilization:latest ."
+        ],
+        "parallel": false
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "kubectl apply -f ./apps/average-cpu-utilization/manifests/kubernetes"
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": []
+}

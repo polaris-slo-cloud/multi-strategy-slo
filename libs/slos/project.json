@@ -1,0 +1,49 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/slos/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/slos",
+        "main": "libs/slos/src/index.ts",
+        "tsConfig": "libs/slos/tsconfig.lib.json",
+        "assets": ["libs/slos/*.md"]
+      }
+    },
+    "publish": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs slos {args.ver} {args.tag}"
+      },
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "build"
+        }
+      ]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/slos/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/slos"],
+      "options": {
+        "jestConfig": "libs/slos/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "gen-crds": {
+      "executor": "@polaris-sloc/polaris-nx:generate-crds",
+      "options": {}
+    }
+  },
+  "tags": []
+}

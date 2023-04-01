@@ -1,5 +1,10 @@
 {
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
-  "projects": {}
+  "projects": {
+    "average-cpu-utilization": "apps/average-cpu-utilization",
+    "multi-elasticity-strategy-controller": "apps/multi-elasticity-strategy-controller",
+    "resource-observer": "apps/resource-observer",
+    "slos": "libs/slos"
+  }
 }

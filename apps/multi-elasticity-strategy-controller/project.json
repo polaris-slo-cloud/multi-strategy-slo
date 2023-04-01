@@ -1,0 +1,78 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/multi-elasticity-strategy-controller/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/multi-elasticity-strategy-controller",
+        "main": "apps/multi-elasticity-strategy-controller/src/main.ts",
+        "tsConfig": "apps/multi-elasticity-strategy-controller/tsconfig.app.json",
+        "assets": ["apps/multi-elasticity-strategy-controller/src/assets"],
+        "externalDependencies": "none"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/multi-elasticity-strategy-controller/src/environments/environment.ts",
+              "with": "apps/multi-elasticity-strategy-controller/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:node",
+      "options": {
+        "buildTarget": "multi-elasticity-strategy-controller:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "multi-elasticity-strategy-controller:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/multi-elasticity-strategy-controller/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/multi-elasticity-strategy-controller"],
+      "options": {
+        "jestConfig": "apps/multi-elasticity-strategy-controller/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker build -f ./apps/multi-elasticity-strategy-controller/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=multi-elasticity-strategy-controller -t polarissloc/multi-elasticity-strategy-controller:latest ."
+        ],
+        "parallel": false
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "kubectl apply -f ./apps/multi-elasticity-strategy-controller/manifests/kubernetes"
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": []
+}
