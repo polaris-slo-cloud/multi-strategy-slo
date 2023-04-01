@@ -14,7 +14,7 @@ export default new CpuUtilizationSloMapping({
       group: 'apps',
       version: 'v1',
       kind: 'Deployment',
-      name: 'nginx-deployment',
+      name: 'http-stress',
     }),
     elasticityStrategy: new MultiElasticityStrategyKind(),
     sloConfig: {
