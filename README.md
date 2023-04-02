@@ -7,6 +7,8 @@ The elasticity strategy controller and slo contoller are connected by a subtype 
 
 MultiElasticityStrategy uses the *maxAllocatableCpuMillis* and static configuration provided by the customer to decide whether to scale vertically or horizontally. Vertical scaling is favored over horizontal scaling meaning the target is scaled up or down if it is within the specified bounds. If vertical scaling would violate any resource constraints or static configuration properties, horizontal scaling is applied. The vertical scaling strategy is fair, therefore every container gets the same resource allocation.
 
+Important note: the elasticity strategy does not scale memory vertically!
+
 In order to scrape metrics correctly, the target objects need to have resource limits configured, which is then automatically changed by the MultiElasticityStrategy.
 
 ## Prerequisite
