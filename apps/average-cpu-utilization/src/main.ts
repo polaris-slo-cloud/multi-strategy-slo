@@ -32,8 +32,6 @@ initPrometheusQueryBackend(
 // Initialize the used Polaris mapping libraries
 initSloMappingsLib(polarisRuntime);
 
-// ToDo: Initialize any additional libraries, e.g., composed metrics.
-
 // Create an SloControlLoop and register the factories for the ServiceLevelObjectives it will handle
 const sloControlLoop = polarisRuntime.createSloControlLoop();
 sloControlLoop.microcontrollerFactory.registerFactoryFn(

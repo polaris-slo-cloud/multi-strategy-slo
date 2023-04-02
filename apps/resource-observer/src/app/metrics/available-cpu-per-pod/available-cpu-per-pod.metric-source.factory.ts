@@ -23,17 +23,7 @@ export class AvailableCpuPerPodMetricSourceFactory
       AvailableCpuPerPodParams
     >
 {
-  // ToDo:
-  // - Adapt this list, if necessary.
-  // - To register this factory with the `MetricsSourcesManager` (needed if the metric source should execute in the current process
-  //   and be available through `MetricSource.getComposedMetricSource()`, add the following code to your `initPolarisLib()` function
-  //   or to your `main.ts`:
-  //   ```
-  //   AvailableCpuPerPodMetricSourceFactory.supportedSloTargetTypes.forEach(
-  //       sloTargetType => runtime.metricsSourcesManager.addComposedMetricSourceFactory(new AvailableCpuPerPodMetricSourceFactory(), sloTargetType),
-  //   );
-  //   ```
-  //
+
   /**
    * The list of supported `SloTarget` types.
    *
@@ -69,7 +59,6 @@ export class AvailableCpuPerPodMetricSourceFactory
 
   readonly metricType = AvailableCpuPerPodMetric.instance;
 
-  // ToDo: Adapt this, if necessary.
   readonly metricSourceName = `${AvailableCpuPerPodMetric.instance.metricTypeName}/generic-available-cpu-per-pod`;
 
   createSource(

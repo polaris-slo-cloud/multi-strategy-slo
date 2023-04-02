@@ -22,13 +22,13 @@ const ELASTICITY_TOLERANCE = 10;
 /**
  * Controller for the MultiElasticityStrategy.
  *
- * ToDo:
- *  1. If you want to restrict the type of workloads that this elasticity strategy can be applied to,
- *     change the first generic parameter from `SloTarget` to the appropriate type.
- *  2. If your elasticity strategy input is not of type `SloCompliance`, change the definition of the controller class
- *     to extend `ElasticityStrategyController` instead of `SloComplianceElasticityStrategyControllerBase`.
- *  3. Implement the `execute()` method.
- *  4. Adapt `manifests/1-rbac.yaml` to include get and update permissions on all resources that you update in the orchestrator during `execute()`.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 export class MultiElasticityStrategyController implements ElasticityStrategyController<
   CustomSloCompliance,

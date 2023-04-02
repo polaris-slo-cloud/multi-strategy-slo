@@ -8,13 +8,6 @@ import { AvailableCpuPerPod, AvailableCpuPerPodParams } from '@org/slos';
 import { Observable } from 'rxjs';
 import {switchMap, tap} from 'rxjs/operators';
 
-// ToDo:
-// 1. Adapt the list of `supportedSloTargetTypes` in `AvailableCpuPerPodMetricSourceFactory` (see available-cpu-per-pod.metric-source.factory.ts).
-// 2. Adapt the `AvailableCpuPerPodMetricSourceFactory.metricSourceName`, if needed (e.g., if there are multiple sources for AvailableCpuPerPodMetric that differ
-//    based on the supported SloTarget types).
-// 3. Implement `AvailableCpuPerPodMetricSource.getValueStream()` to compute the metric.
-// 4. Adapt the `release` label in `../../../../manifests/kubernetes/3-service-monitor.yaml` to ensure that Prometheus will scrape this controller.
-
 /**
  * Computes the `AvailableCpuPerPod` composed metric.
  */
