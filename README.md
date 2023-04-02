@@ -1,6 +1,6 @@
 # Average CPU Utilization SLO with multiple elasticity strategies
 
-A customer can specify a target CPU utilization service level objective for a target object using the Polaris Cloud SLO Framework.
+A customer can specify a target CPU utilization service level objective for a target object using the [Polaris Cloud SLO Framework](https://github.com/polaris-slo-cloud/polaris).
 The SLO controller measures the average CPU usage accross all pods of the target objects over a 5 minute duration. Both composed metrics and time serires queries are used to not only gather CPU utilization percentage, but also to collect available resources per container accross all nodes, on which the pods are present.
 
 The elasticity strategy controller and slo contoller are connected by a subtype of SloCompliance containing *currSloCompliancePercentage* and *maxAllocatableCpuMillis*. This mapping is then used by a so called MultiElasticityStrategy that scales the target object vertically as well as horizontally.
