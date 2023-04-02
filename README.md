@@ -76,8 +76,7 @@ Test service:
 You can use Grafana shipped with *prometheus-community*
 
     microk8s kubectl get secret prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode; echo -n monitoring
-    microk8s kubectl expose service prometheus-grafana --type=NodePort --target-port=3000 -n monitoring
-    microk8s kubectl port-forward service/grafana-ext 9090:3000 --address='0.0.0.0' -n monitoring
+    microk8s kubectl port-forward prometheus-grafana 9090:80 --address='0.0.0.0' -n monitoring
 
 
 *watch* curl and port-forward in case of service restarts or pod restarts to keep the CPU load high.
