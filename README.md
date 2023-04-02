@@ -25,15 +25,18 @@ Create at least one (preferably two) virtual machines, then install Debian on th
 - install microk8s
 
 Join the worker nodes to the microk8s cluster.
+Enable required services:
+
+    microk8s enable dns rbac helm3 metrics-server
 
 Get prometheus helm chart:
 
     microk8s helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
     microk8s helm repo update
 
-On the microk8s cluster install prometheus stack in the monitoring namespace:
+On the microk8s cluster install prometheus stack in the monitoring namespace with custom values.yaml, that enables prometheus logging to stdout and restores some cadvisor metrics.
 
-    microk8s helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
+    microk8s helm install prometheus prometheus-community/kube-prometheus-stack --values ./helm-values/prometheus-values.yaml -n monitoring
 
 Install all CRDs, then apply all manifest files using:
 
@@ -48,8 +51,8 @@ In order to test the CPU utilization SLO, I created a simple python image that g
 
 Create stress deployment:
 
-    kubectl create deployment http-stress --image=stvnkiss/http-stress --replicas=2 --port=8000 -n polaris
-    kubectl set resources deployment http-stress --requests=cpu=200m,memory=256Mi --limits=cpu=200m,memory=256Mi -n polaris
+    microk8s kubectl create deployment http-stress --image=stvnkiss/http-stress --replicas=2 --port=8000 -n polaris
+    microk8s kubectl set resources deployment http-stress --requests=cpu=200m,memory=256Mi --limits=cpu=200m,memory=256Mi -n polaris
 
 Serialize the SLO mapping:
 
@@ -76,10 +79,5 @@ You can use Grafana shipped with *prometheus-community*
     microk8s kubectl expose service prometheus-grafana --type=NodePort --target-port=3000 -n monitoring
     microk8s kubectl port-forward service/grafana-ext 9090:3000 --address='0.0.0.0' -n monitoring
 
-
-Set helm chart values.yaml in order to enable Prometheus query logging:
-
-    #https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
-    queryLogFile: /dev/stdout
 
 *watch* curl and port-forward in case of service restarts or pod restarts to keep the CPU load high.
