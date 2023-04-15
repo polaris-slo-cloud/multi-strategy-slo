@@ -1,1 +1,2 @@
-export * from './multi-elasticity-strategy.controller';
+export * from './vertical-elasticity-strategy.controller';
+export * from './horizontal-elasticity-strategy.controller';

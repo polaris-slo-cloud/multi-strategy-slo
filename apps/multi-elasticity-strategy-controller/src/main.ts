@@ -1,11 +1,12 @@
 import { KubeConfig } from '@kubernetes/client-node';
 import {
-  MultiElasticityStrategyKind,
   initPolarisLib as initMappingsLib,
 } from '@org/slos';
 import { Logger } from '@polaris-sloc/core';
 import { initPolarisKubernetes } from '@polaris-sloc/kubernetes';
-import { MultiElasticityStrategyController } from './app/elasticity';
+import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
+import {HorizontalElasticityStrategyController} from './app/elasticity/horizontal-elasticity-strategy.controller';
+import {VerticalElasticityStrategyController} from './app/elasticity/vertical-elasticity-strategy.controller';
 
 // Load the KubeConfig and initialize the @polaris-sloc/kubernetes library.
 const k8sConfig = new KubeConfig();
@@ -21,8 +22,12 @@ manager
   .startWatching({
     kindsToWatch: [
       {
-        kind: new MultiElasticityStrategyKind(),
-        controller: new MultiElasticityStrategyController(polarisRuntime),
+        kind: new HorizontalElasticityStrategyKind(),
+        controller: new HorizontalElasticityStrategyController(polarisRuntime),
+      },
+      {
+        kind: new VerticalElasticityStrategyKind(),
+        controller: new VerticalElasticityStrategyController(polarisRuntime)
       },
     ],
   })

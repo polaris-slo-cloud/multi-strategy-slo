@@ -1,8 +1,6 @@
-import { ApiObjectMetadata, SloTarget } from '@polaris-sloc/core';
-import {
-  CpuUtilizationSloMapping,
-  CpuUtilizationSloMappingSpec, MultiElasticityStrategyKind,
-} from '@org/slos';
+import {ApiObjectMetadata, SloTarget} from '@polaris-sloc/core';
+import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, RandomDecisionLogic,} from '@org/slos';
+import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
 
 export default new CpuUtilizationSloMapping({
   metadata: new ApiObjectMetadata({
@@ -16,7 +14,9 @@ export default new CpuUtilizationSloMapping({
       kind: 'Deployment',
       name: 'http-stress',
     }),
-    elasticityStrategy: new MultiElasticityStrategyKind(),
+    primaryElasticityStrategy: new HorizontalElasticityStrategyKind(),
+    secondaryElasticityStrategy: new VerticalElasticityStrategyKind(),
+    elasticityDecisionLogic: new RandomDecisionLogic(),
     sloConfig: {
       targetUtilizationPercentage: 50
     },

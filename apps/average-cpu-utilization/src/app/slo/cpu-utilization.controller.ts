@@ -3,20 +3,21 @@ import {
   AvailableCpuPerPodMetric,
   AvailableCpuPerPodParams,
   CpuUtilizationSloConfig,
-  CustomSloCompliance
+  CpuUtilizationSloMappingSpec,
+  ElasticityDecisionLogic
 } from '@org/slos';
 import {
   ComposedMetricSource,
   createOwnerReference,
-  Duration,
+  Duration, ElasticityStrategyKind,
   LabelFilters,
   LabelGroupingOrJoinType,
   MetricsSource,
   ObservableOrPromise,
   OrchestratorGateway,
-  ServiceLevelObjective,
+  ServiceLevelObjective, SloCompliance,
   SloMapping,
-  SloOutput,
+  SloOutput, SloTarget,
   TimeRange,
 } from '@polaris-sloc/core';
 import {of} from 'rxjs';
@@ -27,21 +28,25 @@ import {of} from 'rxjs';
  *
  */
 export class CpuUtilizationSlo
-  implements ServiceLevelObjective<CpuUtilizationSloConfig, CustomSloCompliance>
+  implements ServiceLevelObjective<CpuUtilizationSloConfig, SloCompliance>
 {
-  sloMapping: SloMapping<CpuUtilizationSloConfig, CustomSloCompliance>;
+  sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
+  sloMappingSpec: CpuUtilizationSloMappingSpec;
 
   private metricsSource: MetricsSource;
   private allocatableResourcesSource: ComposedMetricSource<AvailableCpuPerPod>;
+  private decisionLogic: ElasticityDecisionLogic<CpuUtilizationSloConfig, SloCompliance, SloTarget, ElasticityStrategyKind<any>, ElasticityStrategyKind<any>>;
 
 
   configure(
-    sloMapping: SloMapping<CpuUtilizationSloConfig, CustomSloCompliance>,
+    sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>,
     metricsSource: MetricsSource,
     orchestrator: OrchestratorGateway
   ): ObservableOrPromise<void> {
     this.sloMapping = sloMapping;
     this.metricsSource = metricsSource;
+    this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
+    this.decisionLogic = this.sloMappingSpec.elasticityDecisionLogic;
 
     const allocMetricParams: AvailableCpuPerPodParams = {
       sloTarget: sloMapping.spec.targetRef,
@@ -50,26 +55,19 @@ export class CpuUtilizationSlo
     };
 
     this.allocatableResourcesSource = metricsSource.getComposedMetricSource(AvailableCpuPerPodMetric.instance, allocMetricParams);
-    return of(undefined);
+    return this.decisionLogic.configure(orchestrator, sloMapping);
   }
 
-  evaluate(): ObservableOrPromise<SloOutput<CustomSloCompliance>> {
+  evaluate(): ObservableOrPromise<SloOutput<SloCompliance>> {
+    //TODO select strategy
     return Promise.all([
-      this.calculateSloCompliance(),
-      this.getMaxAllocatableCpu()
-    ]).then((value: [number, number]) => ({
+      this.calculateSloCompliance()
+    ]).then((value: [number]) => ({
       sloMapping: this.sloMapping,
       elasticityStrategyParams: {
-        currSloCompliancePercentage: value[0],
-        maxAllocatableCpuMillis: value[1]
+        currSloCompliancePercentage: value[0]
       }
     }));
-  }
-
-  private getMaxAllocatableCpu(): Promise<number> {
-    return this.allocatableResourcesSource.getCurrentValue().toPromise()
-      .then(x => x.value.maxAllocatable)
-      .then(x => Math.floor(x * 1000));
   }
 
   private calculateSloCompliance(): Promise<number> {
