@@ -1,11 +1,14 @@
 import {
-  ApiObjectMetadata,
-  ElasticityStrategyExecutionError,
-  initSelf, NamespacedObjectReference,
+  initSelf,
+  NamespacedObjectReference,
   ObjectKind,
   ObservableOrPromise,
-  OrchestratorGateway, PodTemplateContainer,
-  PolarisType, Scale,
+  OrchestratorClient,
+  OrchestratorGateway,
+  PodTemplateContainer,
+  PolarisType,
+  Resources,
+  Scale,
   SloCompliance,
   SloMapping,
   SloMappingBase,
@@ -139,8 +142,9 @@ export class PriorityDecisionLogic implements ElasticityDecisionLogic<
   HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
 
-  private orchestrator: OrchestratorGateway;
+  private orchestratorClient: OrchestratorClient;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
+  private sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
 
   selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
     const scaleDirection = sloOutput.currSloCompliancePercentage >= 100 ? 'UP' : 'DOWN';
@@ -150,10 +154,10 @@ export class PriorityDecisionLogic implements ElasticityDecisionLogic<
   }
 
   configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {
-    this.orchestrator = orchestrator;
+    this.orchestratorClient = orchestrator.createOrchestratorClient();
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
-    sloMapping.spec.targetRef
-    return undefined;
+    this.sloMapping = sloMapping;
+    return of(null);
   }
 
   private isPrimaryElasticityStrategyAvailable(scaleDirection: 'UP' | 'DOWN'): Promise<boolean> {
@@ -166,47 +170,40 @@ export class PriorityDecisionLogic implements ElasticityDecisionLogic<
 
   private async isHorizontalElasticityStrategyAvailable(scaleDirection: 'UP' | 'DOWN'): Promise<boolean> {
     const scale = await this.loadTargetScale();
-    const replicas = scale.spec.replicas;
-    if (scaleDirection === 'UP') {
-      if (replicas >= this.sloMappingSpec.staticElasticityStrategyConfig.maxReplicas) {
-        return false;
-      }
-    } else {
-      if (replicas <= this.sloMappingSpec.staticElasticityStrategyConfig.minReplicas) {
-        return false;
-      }
-    }
-    return true;
+    const currentReplicas = scale.spec.replicas;
+    const config = this.sloMappingSpec.staticElasticityStrategyConfig;
+    const maxReplicas = config.maxReplicas;
+    const minReplicas = config.minReplicas;
+
+    return !(scaleDirection === 'UP' && currentReplicas === maxReplicas || currentReplicas === minReplicas);
+
   }
 
   private async isVerticalElasticityStrategyAvailable(scaleDirection: 'UP' | 'DOWN'): Promise<boolean> {
     const target = await this.loadTarget();
     const containers = target.spec.template.spec.containers;
-    const container = containers[0];
-    if (scaleDirection === 'UP') {
-      if (
-        container.resources.memoryMiB >= this.sloMappingSpec.staticElasticityStrategyConfig.maxResources //TODO fix
-        || container.resources.milliCpu >= this.sloMappingSpec.staticElasticityStrategyConfig.maxResources
-      ) {
-        return false;
-      }
-    } else {
-      if (
-        container.resources.memoryMiB <= this.sloMappingSpec.staticElasticityStrategyConfig.minResources //TODO fix
-        || container.resources.milliCpu <= this.sloMappingSpec.staticElasticityStrategyConfig.minResources
-      ) {
-        return false;
-      }
+    const currentResources = containers[0].resources;
+    const config = this.sloMappingSpec.staticElasticityStrategyConfig;
+    const maxResources = config.maxResources as Resources;
+    const minResources = config.minResources as Resources;
+
+    const isResourceLimitReached = (resourceLimit: Resources) => {
+      return currentResources.memoryMiB === resourceLimit.memoryMiB || currentResources.milliCpu === resourceLimit.milliCpu;
     }
-    return true;
+
+    if (scaleDirection === 'UP') {
+      return isResourceLimitReached(maxResources);
+    } else {
+      return isResourceLimitReached(minResources);
+    }
   }
 
   private loadTargetScale(): Promise<Scale> {
     const targetRef = new NamespacedObjectReference({
-      namespace: 'polaris', //TODO: fix
+      namespace: this.sloMapping.metadata.namespace,
       ...this.sloMappingSpec.targetRef,
     });
-    return this.orchestrator.createOrchestratorClient().getScale(targetRef);
+    return this.orchestratorClient.getScale(targetRef);
   }
 
   private async loadTarget(): Promise<PodTemplateContainer> {
@@ -217,13 +214,10 @@ export class PriorityDecisionLogic implements ElasticityDecisionLogic<
         version: targetRef.version,
         kind: targetRef.kind,
       }),
-      metadata: new ApiObjectMetadata({
-        namespace: 'polaris', //TODO: fix hardcoded value
-        name: targetRef.name,
-      }),
+      metadata: this.sloMapping.metadata
     });
 
-    const ret = await this.orchestrator.createOrchestratorClient().read(queryApiObj);
+    const ret = await this.orchestratorClient.read(queryApiObj);
     if (!ret.spec?.template) {
       throw new Error('The SloTarget does not contain a pod template (spec.template field).');
     }
