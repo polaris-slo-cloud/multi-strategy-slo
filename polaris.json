@@ -11,13 +11,10 @@
         "polarisTypes": [
           "AvailableCpuPerPodMetricMapping",
           "MultiElasticityStrategy",
-          "CpuUtilizationSloMapping"
+          "CpuUtilizationSloMapping",
+          "AverageCpuUtilizationMetricMapping"
         ]
       }
-    },
-    "resource-observer": {
-      "projectType": "composed-metric-controller",
-      "tsEntryPoint": "apps/resource-observer/src/main.ts"
     },
     "multi-elasticity-strategy-controller": {
       "projectType": "elasticity-strategy-controller",
@@ -26,6 +23,10 @@
     "average-cpu-utilization": {
       "projectType": "slo-controller",
       "tsEntryPoint": "apps/average-cpu-utilization/src/main.ts"
+    },
+    "average-cpu-utilization-metric-controller": {
+      "projectType": "composed-metric-controller",
+      "tsEntryPoint": "apps/average-cpu-utilization-metric-controller/src/main.ts"
     }
   }
 }

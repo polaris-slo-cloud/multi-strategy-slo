@@ -1,7 +1,7 @@
 import { KubeConfig } from '@kubernetes/client-node';
 import {
-  AvailableCpuPerPodMetric,
-  AvailableCpuPerPodMetricMapping,
+  AverageCpuUtilizationMetric,
+  AverageCpuUtilizationMetricMapping,
   initPolarisLib as initCompMetricsLib,
 } from '@org/slos';
 import {
@@ -16,7 +16,7 @@ import {
   PrometheusComposedMetricsCollectorManager,
   initPrometheusQueryBackend,
 } from '@polaris-sloc/prometheus';
-import { AvailableCpuPerPodMetricSourceFactory } from './app/metrics';
+import { AverageCpuUtilizationMetricSourceFactory } from './app/metrics';
 
 // Load the KubeConfig and initialize the @polaris-sloc/kubernetes library.
 const k8sConfig = new KubeConfig();
@@ -67,9 +67,9 @@ manager
     collectorFactories: [promMetricsCollectorManager],
     kindsToWatch: [
       {
-        mappingKind: new AvailableCpuPerPodMetricMapping().objectKind,
-        metricType: AvailableCpuPerPodMetric.instance,
-        metricSourceFactory: new AvailableCpuPerPodMetricSourceFactory(),
+        mappingKind: new AverageCpuUtilizationMetricMapping().objectKind,
+        metricType: AverageCpuUtilizationMetric.instance,
+        metricSourceFactory: new AverageCpuUtilizationMetricSourceFactory(),
       },
     ],
   })

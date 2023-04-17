@@ -1,0 +1,78 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/average-cpu-utilization-metric-controller/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/average-cpu-utilization-metric-controller",
+        "main": "apps/average-cpu-utilization-metric-controller/src/main.ts",
+        "tsConfig": "apps/average-cpu-utilization-metric-controller/tsconfig.app.json",
+        "assets": ["apps/average-cpu-utilization-metric-controller/src/assets"],
+        "externalDependencies": "none"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/average-cpu-utilization-metric-controller/src/environments/environment.ts",
+              "with": "apps/average-cpu-utilization-metric-controller/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/node:node",
+      "options": {
+        "buildTarget": "average-cpu-utilization-metric-controller:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "average-cpu-utilization-metric-controller:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/average-cpu-utilization-metric-controller/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/average-cpu-utilization-metric-controller"],
+      "options": {
+        "jestConfig": "apps/average-cpu-utilization-metric-controller/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker build -f ./apps/average-cpu-utilization-metric-controller/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=average-cpu-utilization-metric-controller -t polarissloc/average-cpu-utilization-metric-controller:latest ."
+        ],
+        "parallel": false
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "kubectl apply -f ./apps/average-cpu-utilization-metric-controller/manifests/kubernetes"
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": []
+}

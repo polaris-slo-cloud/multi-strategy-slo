@@ -194,7 +194,7 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
   CpuUtilizationSloConfig,
   SloCompliance,
   SloTarget,
-  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
+  VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind
 > {
 
   constructor() {
@@ -304,7 +304,7 @@ export class CpuUtilizationSloMappingSpec extends MultiElasticitySloMappingSpec<
   CpuUtilizationSloConfig,
   SloCompliance,
   SloTarget,
-  HorizontalElasticityStrategyKind
+  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {}
 
 /**

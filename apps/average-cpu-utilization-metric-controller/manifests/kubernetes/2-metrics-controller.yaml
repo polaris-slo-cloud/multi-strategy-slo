@@ -2,24 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    component: resource-observer
+    component: average-cpu-utilization-metric-controller
     tier: control-plane
-  name: resource-observer
+  name: average-cpu-utilization-metric-controller
   namespace: polaris
 spec:
   selector:
     matchLabels:
-      component: resource-observer
+      component: average-cpu-utilization-metric-controller
       tier: control-plane
   replicas: 1
   template:
     metadata:
       labels:
-        component: resource-observer
+        component: average-cpu-utilization-metric-controller
         tier: control-plane
         polaris-controller-type: composed-metric
     spec:
-      serviceAccountName: resource-observer
+      serviceAccountName: average-cpu-utilization-metric-controller
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -36,7 +36,7 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - image: stvnkiss/resource-observer:latest
+        - image: polarissloc/average-cpu-utilization-metric-controller:latest
           name: metrics-controller
           resources:
             limits:
@@ -76,14 +76,14 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: polaris
-  name: resource-observer
+  name: average-cpu-utilization-metric-controller
   labels:
-    component: resource-observer
+    component: average-cpu-utilization-metric-controller
     tier: control-plane
     polaris-controller-type: composed-metric
 spec:
   selector:
-    component: resource-observer
+    component: average-cpu-utilization-metric-controller
     tier: control-plane
     polaris-controller-type: composed-metric
   ports:

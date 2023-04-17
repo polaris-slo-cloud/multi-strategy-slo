@@ -3,8 +3,8 @@
   "version": 2,
   "projects": {
     "average-cpu-utilization": "apps/average-cpu-utilization",
+    "average-cpu-utilization-metric-controller": "apps/average-cpu-utilization-metric-controller",
     "multi-elasticity-strategy-controller": "apps/multi-elasticity-strategy-controller",
-    "resource-observer": "apps/resource-observer",
     "slos": "libs/slos"
   }
 }

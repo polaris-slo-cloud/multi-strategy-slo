@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-  displayName: 'resource-observer',
+  displayName: 'average-cpu-utilization-metric-controller',
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
@@ -12,5 +12,6 @@ export default {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/apps/resource-observer',
+  coverageDirectory:
+    '../../coverage/apps/average-cpu-utilization-metric-controller',
 };

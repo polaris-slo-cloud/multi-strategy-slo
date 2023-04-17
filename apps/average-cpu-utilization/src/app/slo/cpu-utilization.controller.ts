@@ -1,7 +1,7 @@
 import {
-  AvailableCpuPerPod,
-  AvailableCpuPerPodMetric,
-  AvailableCpuPerPodParams,
+  AverageCpuUtilization,
+  AverageCpuUtilizationMetric,
+  AverageCpuUtilizationParams,
   CpuUtilizationSloConfig,
   CpuUtilizationSloMappingSpec,
   ElasticityDecisionLogic
@@ -9,10 +9,7 @@ import {
 import {
   ComposedMetricSource,
   createOwnerReference,
-  Duration,
   ElasticityStrategyKind,
-  LabelFilters,
-  LabelGroupingOrJoinType,
   MetricsSource,
   ObservableOrPromise,
   OrchestratorGateway,
@@ -21,8 +18,8 @@ import {
   SloMapping,
   SloOutput,
   SloTarget,
-  TimeRange,
 } from '@polaris-sloc/core';
+import {map} from 'rxjs/operators';
 
 /**
  * Implements the CpuUtilization SLO.
@@ -30,13 +27,12 @@ import {
  *
  */
 export class CpuUtilizationSlo
-  implements ServiceLevelObjective<CpuUtilizationSloConfig, SloCompliance>
-{
+  implements ServiceLevelObjective<CpuUtilizationSloConfig, SloCompliance> {
   sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
   sloMappingSpec: CpuUtilizationSloMappingSpec;
 
   private metricsSource: MetricsSource;
-  private allocatableResourcesSource: ComposedMetricSource<AvailableCpuPerPod>;
+  private averageCpuUtilizationMetricSource: ComposedMetricSource<AverageCpuUtilization>;
   private decisionLogic: ElasticityDecisionLogic<CpuUtilizationSloConfig, SloCompliance, SloTarget, ElasticityStrategyKind<any>>;
 
 
@@ -50,61 +46,32 @@ export class CpuUtilizationSlo
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
     this.decisionLogic = this.sloMappingSpec.elasticityDecisionLogic;
 
-    const allocMetricParams: AvailableCpuPerPodParams = {
+    const cpuUtilizationParams: AverageCpuUtilizationParams = {
+      timeRangeMinutes: 5,
       sloTarget: sloMapping.spec.targetRef,
       namespace: sloMapping.metadata.namespace,
       owner: createOwnerReference(sloMapping)
     };
 
-    this.allocatableResourcesSource = metricsSource.getComposedMetricSource(AvailableCpuPerPodMetric.instance, allocMetricParams);
+    this.averageCpuUtilizationMetricSource = metricsSource.getComposedMetricSource(AverageCpuUtilizationMetric.instance, cpuUtilizationParams);
     return this.decisionLogic.configure(orchestrator, sloMapping, metricsSource);
   }
 
   evaluate(): ObservableOrPromise<SloOutput<SloCompliance>> {
-    //TODO select strategy
-    return Promise.all([
-      this.calculateSloCompliance()
-    ]).then((value: [number]) => ({
-      sloMapping: this.sloMapping,
-      elasticityStrategyParams: {
-        currSloCompliancePercentage: value[0]
-      }
-    }));
+    return this.averageCpuUtilizationMetricSource.getCurrentValue().pipe(
+      map(sample => sample.value),
+      map(result => this.calculateCompliance(result)),
+      map(currSloCompliancePercentage => ({
+        sloMapping: this.sloMapping,
+        elasticityStrategyParams: {
+          currSloCompliancePercentage
+        }
+      }))
+    );
   }
 
-  private calculateSloCompliance(): Promise<number> {
+  private calculateCompliance(sample: AverageCpuUtilization): number {
     const target = this.sloMapping.spec.sloConfig.targetUtilizationPercentage;
-    return this.getAvgCpuUtilization()
-      .then(value => Math.ceil((value / target) * 100));
-  }
-
-  private async getAvgCpuUtilization(): Promise<number> {
-    const filter = LabelFilters.regex('pod', `${this.sloMapping.spec.targetRef.name}.*`);
-    const grouping = {labels: ['pod_name', 'container_name'], labelUsageType: LabelGroupingOrJoinType.ByOrOn};
-
-    const cpuPeriod = this.metricsSource.getTimeSeriesSource()
-      .select<number>('container', 'spec_cpu_period')
-      .filterOnLabel(filter)
-
-    const cpuQuota = this.metricsSource.getTimeSeriesSource()
-      .select<number>('container', 'spec_cpu_quota')
-      .filterOnLabel(filter)
-      .divideBy(cpuPeriod)
-      .sumByGroup(grouping);
-
-    const cpuUsageSeconds = this.metricsSource.getTimeSeriesSource()
-      .select<number>(
-        'container',
-        'cpu_usage_seconds_total',
-        TimeRange.fromDuration(Duration.fromMinutes(5)))
-      .filterOnLabel(filter);
-
-    const cpuUsage = cpuUsageSeconds.rate()
-      .sumByGroup(grouping)
-      .divideBy(cpuQuota)
-      .multiplyBy(100);
-
-    const result = await cpuUsage.execute();
-    return Math.ceil(result.results[0]?.samples[0].value);
+    return Math.ceil((sample.averageCpuUtilization / target) * 100)
   }
 }

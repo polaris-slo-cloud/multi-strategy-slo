@@ -6,14 +6,14 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: resource-observer
+  name: average-cpu-utilization-metric-controller
   namespace: polaris
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   # ClusterRoles are not namespaced
-  name: resource-observer
+  name: average-cpu-utilization-metric-controller
 rules:
   # Allow reading all Composed Metric Mapping types
   # - apiGroups:
@@ -29,7 +29,7 @@ rules:
   - apiGroups:
       - metrics.polaris-slo-cloud.github.io
     resources:
-      - availablecpuperpodmetricmappings
+      - averagecpuutilizationmetricmappings
     verbs:
       - get
       - watch
@@ -37,7 +37,7 @@ rules:
   - apiGroups:
       - metrics.polaris-slo-cloud.github.io
     resources:
-      - availablecpuperpodmetricmappings/status
+      - averagecpuutilizationmetricmappings/status
     verbs:
       - get
 
@@ -46,12 +46,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 # Optionally, we could create a RoleBinding and to scope the permissions to a specific namespace
 metadata:
-  name: control-availablecpuperpodmetricmappings
+  name: control-averagecpuutilizationmetricmappings
 subjects:
   - kind: ServiceAccount
-    name: resource-observer
+    name: average-cpu-utilization-metric-controller
     namespace: polaris
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: resource-observer
+  name: average-cpu-utilization-metric-controller
