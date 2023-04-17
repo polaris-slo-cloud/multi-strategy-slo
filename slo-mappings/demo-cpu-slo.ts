@@ -1,7 +1,7 @@
 import {ApiObjectMetadata, SloTarget} from '@polaris-sloc/core';
 import {
   CpuUtilizationSloMapping,
-  CpuUtilizationSloMappingSpec, RandomDecisionLogic,
+  CpuUtilizationSloMappingSpec, RandomDecisionLogic, TimeAwareDecisionLogic,
 } from '@org/slos';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
 
@@ -19,7 +19,7 @@ export default new CpuUtilizationSloMapping({
     }),
     primaryElasticityStrategy: new HorizontalElasticityStrategyKind(),
     secondaryElasticityStrategy: new VerticalElasticityStrategyKind(),
-    elasticityDecisionLogic: new RandomDecisionLogic(),
+    elasticityDecisionLogic: new TimeAwareDecisionLogic(),
     sloConfig: {
       targetUtilizationPercentage: 50
     },

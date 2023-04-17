@@ -9,18 +9,20 @@ import {
 import {
   ComposedMetricSource,
   createOwnerReference,
-  Duration, ElasticityStrategyKind,
+  Duration,
+  ElasticityStrategyKind,
   LabelFilters,
   LabelGroupingOrJoinType,
   MetricsSource,
   ObservableOrPromise,
   OrchestratorGateway,
-  ServiceLevelObjective, SloCompliance,
+  ServiceLevelObjective,
+  SloCompliance,
   SloMapping,
-  SloOutput, SloTarget,
+  SloOutput,
+  SloTarget,
   TimeRange,
 } from '@polaris-sloc/core';
-import {of} from 'rxjs';
 
 /**
  * Implements the CpuUtilization SLO.
@@ -35,7 +37,7 @@ export class CpuUtilizationSlo
 
   private metricsSource: MetricsSource;
   private allocatableResourcesSource: ComposedMetricSource<AvailableCpuPerPod>;
-  private decisionLogic: ElasticityDecisionLogic<CpuUtilizationSloConfig, SloCompliance, SloTarget, ElasticityStrategyKind<any>, ElasticityStrategyKind<any>>;
+  private decisionLogic: ElasticityDecisionLogic<CpuUtilizationSloConfig, SloCompliance, SloTarget, ElasticityStrategyKind<any>>;
 
 
   configure(
@@ -55,7 +57,7 @@ export class CpuUtilizationSlo
     };
 
     this.allocatableResourcesSource = metricsSource.getComposedMetricSource(AvailableCpuPerPodMetric.instance, allocMetricParams);
-    return this.decisionLogic.configure(orchestrator, sloMapping);
+    return this.decisionLogic.configure(orchestrator, sloMapping, metricsSource);
   }
 
   evaluate(): ObservableOrPromise<SloOutput<SloCompliance>> {

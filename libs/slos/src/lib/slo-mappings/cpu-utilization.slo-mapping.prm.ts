@@ -1,5 +1,6 @@
 import {
   initSelf,
+  MetricsSource,
   NamespacedObjectReference,
   ObjectKind,
   ObservableOrPromise,
@@ -29,60 +30,112 @@ export interface CpuUtilizationSloConfig {
   targetUtilizationPercentage: number;
 }
 
-export interface ElasticityDecisionLogic<C, O, T extends SloTarget, P extends ElasticityStrategyKind<O, T>, S extends ElasticityStrategyKind<O,  T>> {
+export abstract class ElasticityDecisionLogic<C, O, T extends SloTarget, S extends ElasticityStrategyKind<O,  T>> extends ObjectKind{
 
-  selectElasticityStrategy(sloOutput: O): ObservableOrPromise<P | S>;
-
-  configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<C, O>): ObservableOrPromise<void>;
-}
-
-export abstract class MultiElasticitySloMappingSpec<C, O, T extends SloTarget, P extends ElasticityStrategyKind<O, T>, S extends ElasticityStrategyKind<O, T>> extends SloMappingSpecBase<C, O, T> {
-  constructor(initData?: Partial<MultiElasticitySloMappingSpec<C, O, T, P, S>>) {
+  constructor(initData?: Partial<ElasticityDecisionLogic<C, O, T, S>>) {
     super(initData);
   }
 
-  elasticityStrategy: undefined = undefined;
-  primaryElasticityStrategy: P;
-  secondaryElasticityStrategy: S;
-  elasticityDecisionLogic: ElasticityDecisionLogic<C, O, T, P, S>
+  abstract selectElasticityStrategy(sloOutput: O): ObservableOrPromise<S>;
+
+  abstract configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<C, O>, metricsSource: MetricsSource): ObservableOrPromise<void>;
 }
 
-/**
- * The spec type for the CpuUtilization SLO.
- */
-export class CpuUtilizationSloMappingSpec extends MultiElasticitySloMappingSpec<
+//TODO: GradientBasedDecisionLogic -> sudden change horizontal, constant: vertical -> new metric
+
+enum Day {
+  SUNDAY,
+  MONDAY,
+  TUESDAY,
+  WEDNESDAY,
+  THURSDAY,
+  FRIDAY,
+  SATURDAY,
+}
+
+export class TimeAwareDecisionLogic extends ElasticityDecisionLogic<
   CpuUtilizationSloConfig,
   SloCompliance,
   SloTarget,
-  HorizontalElasticityStrategyKind,
-  VerticalElasticityStrategyKind
-> {}
-
-/**
- * Represents an SLO mapping for the CpuUtilization SLO, which can be used to apply and configure the CpuUtilization SLO.
- */
-export class CpuUtilizationSloMapping extends SloMappingBase<CpuUtilizationSloMappingSpec> {
-  @PolarisType(() => CpuUtilizationSloMappingSpec)
-  spec: CpuUtilizationSloMappingSpec;
-
-  constructor(initData?: SloMappingInitData<CpuUtilizationSloMapping>) {
-    super(initData);
-    this.objectKind = new ObjectKind({
-      group: 'slo.polaris-slo-cloud.github.io',
-      version: 'v1',
-      kind: 'CpuUtilizationSloMapping',
-    });
-    initSelf(this, initData);
-  }
-}
-
-export class RandomDecisionLogic implements ElasticityDecisionLogic<
-  CpuUtilizationSloConfig,
-  SloCompliance,
-  SloTarget,
-  HorizontalElasticityStrategyKind,
-  VerticalElasticityStrategyKind
+  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
+
+  constructor() {
+    super({kind: 'TimeAwareDecisionLogic'});
+  }
+
+  private sloMappingSpec: CpuUtilizationSloMappingSpec;
+  private roundRobinDecisionLogic: RoundRobinDecisionLogic;
+
+  configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>, metricsSource: MetricsSource): ObservableOrPromise<void> {
+    this.roundRobinDecisionLogic = new RoundRobinDecisionLogic();
+    return this.roundRobinDecisionLogic.configure(orchestrator, sloMapping);
+  }
+
+  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
+    const today = this.getToday(new Date().getDay());
+
+    const isPrimaryEnabledToday = this.isPrimaryStrategyEnabled(today);
+    const isSecondaryEnabledToday = true;
+    if (isPrimaryEnabledToday && isSecondaryEnabledToday) {
+      return this.roundRobinDecisionLogic.selectElasticityStrategy(sloOutput);
+    } else if (isPrimaryEnabledToday) {
+      return of(this.sloMappingSpec.primaryElasticityStrategy);
+    } else if (isSecondaryEnabledToday) {
+      return of(this.sloMappingSpec.secondaryElasticityStrategy);
+    }
+    return of(null);
+  }
+
+  isPrimaryStrategyEnabled(day: Day) {
+    //return [...this.sloMappingSpec.staticElasticityStrategyConfig.days].some(x => x === day);
+    return false;
+  }
+
+  getToday(day: number): Day {
+    return Object.values(Day)[day] as Day;
+  }
+
+}
+
+export class ThresholdBasedDecisionLogic extends ElasticityDecisionLogic<
+  CpuUtilizationSloConfig,
+  SloCompliance,
+  SloTarget,
+  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
+> {
+
+  constructor() {
+    super({kind: 'ThresholdBasedDecisionLogic'});
+  }
+
+  private sloMappingSpec: CpuUtilizationSloMappingSpec;
+
+  configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>, metricsSource: MetricsSource): ObservableOrPromise<void> {
+    this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
+    return of(null);
+  }
+
+  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
+    const difference = Math.abs(sloOutput.currSloCompliancePercentage - (100 + sloOutput.tolerance ?? 0));
+    const threshold = this.sloMappingSpec.staticElasticityStrategyConfig.threshold;
+    const selected = difference > threshold ? this.sloMappingSpec.primaryElasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy;
+    return of(selected);
+  }
+
+}
+
+
+export class RandomDecisionLogic extends ElasticityDecisionLogic<
+  CpuUtilizationSloConfig,
+  SloCompliance,
+  SloTarget,
+  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
+> {
+
+  constructor() {
+    super({kind: 'RandomDecisionLogic'});
+  }
 
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
   private strategies: ElasticityStrategyKind<SloCompliance, SloTarget>[];
@@ -100,13 +153,16 @@ export class RandomDecisionLogic implements ElasticityDecisionLogic<
 
 }
 
-export class RoundRobinDecisionLogic implements ElasticityDecisionLogic<
+export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
   CpuUtilizationSloConfig,
   SloCompliance,
   SloTarget,
-  HorizontalElasticityStrategyKind,
-  VerticalElasticityStrategyKind
+  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
+
+  constructor() {
+    super({kind: 'RoundRobinDecisionLogic'});
+  }
 
   private executedStrategy: ElasticityStrategyKind<SloCompliance, SloTarget>;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
@@ -134,13 +190,17 @@ export class RoundRobinDecisionLogic implements ElasticityDecisionLogic<
 
 }
 
-export class PriorityDecisionLogic implements ElasticityDecisionLogic<
+export class PriorityDecisionLogic extends ElasticityDecisionLogic<
   CpuUtilizationSloConfig,
   SloCompliance,
   SloTarget,
-  HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind,
   HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
+
+  constructor() {
+    super({kind: 'PriorityDecisionLogic'});
+  }
+
 
   private orchestratorClient: OrchestratorClient;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
@@ -223,5 +283,44 @@ export class PriorityDecisionLogic implements ElasticityDecisionLogic<
     }
     return ret;
   }
+}
 
+export abstract class MultiElasticitySloMappingSpec<C, O, T extends SloTarget, S extends ElasticityStrategyKind<O, T>> extends SloMappingSpecBase<C, O, T> {
+  constructor(initData?: Partial<MultiElasticitySloMappingSpec<C, O, T, S>>) {
+    super(initData);
+  }
+
+  elasticityStrategy: undefined = undefined;
+  primaryElasticityStrategy: S;
+  secondaryElasticityStrategy: S;
+  elasticityDecisionLogic: ElasticityDecisionLogic<C, O, T, S>
+}
+
+
+/**
+ * The spec type for the CpuUtilization SLO.
+ */
+export class CpuUtilizationSloMappingSpec extends MultiElasticitySloMappingSpec<
+  CpuUtilizationSloConfig,
+  SloCompliance,
+  SloTarget,
+  HorizontalElasticityStrategyKind
+> {}
+
+/**
+ * Represents an SLO mapping for the CpuUtilization SLO, which can be used to apply and configure the CpuUtilization SLO.
+ */
+export class CpuUtilizationSloMapping extends SloMappingBase<CpuUtilizationSloMappingSpec> {
+  @PolarisType(() => CpuUtilizationSloMappingSpec)
+  spec: CpuUtilizationSloMappingSpec;
+
+  constructor(initData?: SloMappingInitData<CpuUtilizationSloMapping>) {
+    super(initData);
+    this.objectKind = new ObjectKind({
+      group: 'slo.polaris-slo-cloud.github.io',
+      version: 'v1',
+      kind: 'CpuUtilizationSloMapping',
+    });
+    initSelf(this, initData);
+  }
 }
