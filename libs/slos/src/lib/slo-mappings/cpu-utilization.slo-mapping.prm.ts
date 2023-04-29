@@ -20,8 +20,6 @@ import {
 import {ElasticityStrategyKind} from '@polaris-sloc/core/src/lib/model/elasticity-strategy-kind.prm';
 import {of} from 'rxjs';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
-import {map} from 'rxjs/operators';
-import {fromPromise} from 'rxjs/internal-compatibility';
 
 /**
  * Represents the configuration options of the CpuUtilization SLO.
@@ -36,7 +34,7 @@ export abstract class ElasticityDecisionLogic<C, O, T extends SloTarget, S exten
     super(initData);
   }
 
-  abstract selectElasticityStrategy(sloOutput: O): ObservableOrPromise<S>;
+  abstract selectElasticityStrategy(sloOutput: O): Promise<S>;
 
   abstract configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<C, O>, metricsSource: MetricsSource): ObservableOrPromise<void>;
 }
@@ -72,7 +70,7 @@ export class TimeAwareDecisionLogic extends ElasticityDecisionLogic<
     return this.roundRobinDecisionLogic.configure(orchestrator, sloMapping);
   }
 
-  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
+  selectElasticityStrategy(sloOutput: SloCompliance): Promise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
     const today = this.getToday(new Date().getDay());
 
     const isPrimaryEnabledToday = this.isPrimaryStrategyEnabled(today);
@@ -80,11 +78,11 @@ export class TimeAwareDecisionLogic extends ElasticityDecisionLogic<
     if (isPrimaryEnabledToday && isSecondaryEnabledToday) {
       return this.roundRobinDecisionLogic.selectElasticityStrategy(sloOutput);
     } else if (isPrimaryEnabledToday) {
-      return of(this.sloMappingSpec.primaryElasticityStrategy);
+      return Promise.resolve(this.sloMappingSpec.primaryElasticityStrategy);
     } else if (isSecondaryEnabledToday) {
-      return of(this.sloMappingSpec.secondaryElasticityStrategy);
+      return Promise.resolve(this.sloMappingSpec.secondaryElasticityStrategy);
     }
-    return of(null);
+    return Promise.resolve(null);
   }
 
   isPrimaryStrategyEnabled(day: Day) {
@@ -116,11 +114,11 @@ export class ThresholdBasedDecisionLogic extends ElasticityDecisionLogic<
     return of(null);
   }
 
-  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
+  selectElasticityStrategy(sloOutput: SloCompliance): Promise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
     const difference = Math.abs(sloOutput.currSloCompliancePercentage - (100 + sloOutput.tolerance ?? 0));
     const threshold = this.sloMappingSpec.staticElasticityStrategyConfig.threshold;
     const selected = difference > threshold ? this.sloMappingSpec.primaryElasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy;
-    return of(selected);
+    return Promise.resolve(selected);
   }
 
 }
@@ -138,7 +136,7 @@ export class RandomDecisionLogic extends ElasticityDecisionLogic<
   }
 
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
-  private strategies: ElasticityStrategyKind<SloCompliance, SloTarget>[];
+  private strategies: HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind[];
 
   configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
@@ -146,9 +144,9 @@ export class RandomDecisionLogic extends ElasticityDecisionLogic<
     return of(null);
   }
 
-  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
+  selectElasticityStrategy(sloOutput: SloCompliance): Promise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
     const randomIndex = Math.round(Math.random());
-    return of(this.strategies[randomIndex]);
+    return Promise.resolve(this.strategies[randomIndex]);
   }
 
 }
@@ -164,7 +162,7 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
     super({kind: 'RoundRobinDecisionLogic'});
   }
 
-  private executedStrategy: ElasticityStrategyKind<SloCompliance, SloTarget>;
+  private executedStrategy: HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
 
   configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {
@@ -173,7 +171,7 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
     return of(null);
   }
 
-  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
+  selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
     const primaryStrategy = this.sloMappingSpec.primaryElasticityStrategy;
     const secondaryStrategy = this.sloMappingSpec.secondaryElasticityStrategy;
     let selectedStrategy;
@@ -185,7 +183,7 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
       selectedStrategy = secondaryStrategy;
       this.executedStrategy = primaryStrategy;
     }
-    return of(selectedStrategy);
+    return Promise.resolve(selectedStrategy);
   }
 
 }
@@ -206,11 +204,10 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
   private sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
 
-  selectElasticityStrategy(sloOutput: SloCompliance): ObservableOrPromise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
+  selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
     const scaleDirection = sloOutput.currSloCompliancePercentage >= 100 ? 'UP' : 'DOWN';
-    return fromPromise(this.isPrimaryElasticityStrategyAvailable(scaleDirection)).pipe(
-      map(isPrimary => isPrimary ? this.sloMappingSpec.primaryElasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy)
-    );
+    return this.isPrimaryElasticityStrategyAvailable(scaleDirection)
+      .then(isPrimary => isPrimary ? this.sloMappingSpec.primaryElasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy);
   }
 
   configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {

@@ -19,7 +19,6 @@ import {
   SloOutput,
   SloTarget,
 } from '@polaris-sloc/core';
-import {map} from 'rxjs/operators';
 
 /**
  * Implements the CpuUtilization SLO.
@@ -57,17 +56,17 @@ export class CpuUtilizationSlo
     return this.decisionLogic.configure(orchestrator, sloMapping, metricsSource);
   }
 
-  evaluate(): ObservableOrPromise<SloOutput<SloCompliance>> {
-    return this.averageCpuUtilizationMetricSource.getCurrentValue().pipe(
-      map(sample => sample.value),
-      map(result => this.calculateCompliance(result)),
-      map(currSloCompliancePercentage => ({
-        sloMapping: this.sloMapping,
-        elasticityStrategyParams: {
-          currSloCompliancePercentage
-        }
-      }))
-    );
+  async evaluate(): Promise<SloOutput<SloCompliance>> {
+    const sample = await this.averageCpuUtilizationMetricSource.getCurrentValue().toPromise();
+    const currSloCompliancePercentage = this.calculateCompliance(sample.value);
+    const compliance = { currSloCompliancePercentage };
+
+    const elasticityStrategy = await this.decisionLogic.selectElasticityStrategy(compliance);
+    return {
+      sloMapping: this.sloMapping,
+      elasticityStrategyParams: compliance,
+      elasticityStrategy
+    };
   }
 
   private calculateCompliance(sample: AverageCpuUtilization): number {
