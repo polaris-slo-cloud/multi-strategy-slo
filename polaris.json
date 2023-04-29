@@ -14,6 +14,10 @@
         ]
       }
     },
+    "multi-elasticity-strategy-controller": {
+      "projectType": "elasticity-strategy-controller",
+      "tsEntryPoint": "apps/multi-elasticity-strategy-controller/src/main.ts"
+    },
     "average-cpu-utilization": {
       "projectType": "slo-controller",
       "tsEntryPoint": "apps/average-cpu-utilization/src/main.ts"
