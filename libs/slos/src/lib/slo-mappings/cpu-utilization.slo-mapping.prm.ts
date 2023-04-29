@@ -290,7 +290,6 @@ export abstract class MultiElasticitySloMappingSpec<C, O, T extends SloTarget, S
     super(initData);
   }
 
-  elasticityStrategy: undefined = undefined;
   primaryElasticityStrategy: S;
   secondaryElasticityStrategy: S;
   elasticityDecisionLogic: ElasticityDecisionLogic<C, O, T, S>

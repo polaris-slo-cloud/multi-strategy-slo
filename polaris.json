@@ -9,16 +9,10 @@
         "tsConfig": "tsconfig.base.json",
         "outDir": "libs/slos/crds",
         "polarisTypes": [
-          "AvailableCpuPerPodMetricMapping",
-          "MultiElasticityStrategy",
           "CpuUtilizationSloMapping",
           "AverageCpuUtilizationMetricMapping"
         ]
       }
-    },
-    "multi-elasticity-strategy-controller": {
-      "projectType": "elasticity-strategy-controller",
-      "tsEntryPoint": "apps/multi-elasticity-strategy-controller/src/main.ts"
     },
     "average-cpu-utilization": {
       "projectType": "slo-controller",

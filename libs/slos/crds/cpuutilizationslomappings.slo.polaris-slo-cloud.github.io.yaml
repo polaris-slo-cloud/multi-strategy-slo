@@ -2,7 +2,7 @@ kind: CustomResourceDefinition
 apiVersion: apiextensions.k8s.io/v1
 metadata:
   annotations:
-    polaris-slo-cloud.github.io/schema-gen-version: 0.5.0
+    polaris-slo-cloud.github.io/schema-gen-version: 0.6.0-beta.3
   name: cpuutilizationslomappings.slo.polaris-slo-cloud.github.io
 spec:
   group: slo.polaris-slo-cloud.github.io
@@ -33,7 +33,10 @@ spec:
             spec:
               type: object
               required:
+                - elasticityDecisionLogic
                 - elasticityStrategy
+                - primaryElasticityStrategy
+                - secondaryElasticityStrategy
                 - sloConfig
                 - targetRef
               description: The spec type for the CpuUtilization SLO.
@@ -164,6 +167,92 @@ spec:
                     `staticConfig` property of the elasticity strategy
                     spec.          maxReplicas: 100,      }, }); ```
                   x-kubernetes-preserve-unknown-fields: true
+                primaryElasticityStrategy:
+                  anyOf:
+                    - type: object
+                      additionalProperties: false
+                      properties:
+                        group:
+                          type: string
+                          description: The group/package that the kind is part of.
+                        version:
+                          type: string
+                          description: The version of the group/package.
+                        kind:
+                          type: string
+                          description: The object type within the group/package.
+                      required:
+                        - kind
+                      description: >-
+                        Denotes an elasticity strategy kind that employs
+                        horizontal scaling.
+                    - type: object
+                      additionalProperties: false
+                      properties:
+                        group:
+                          type: string
+                          description: The group/package that the kind is part of.
+                        version:
+                          type: string
+                          description: The version of the group/package.
+                        kind:
+                          type: string
+                          description: The object type within the group/package.
+                      required:
+                        - kind
+                      description: >-
+                        Denotes an elasticity strategy kind that employs
+                        vertical scaling.
+                secondaryElasticityStrategy:
+                  anyOf:
+                    - type: object
+                      additionalProperties: false
+                      properties:
+                        group:
+                          type: string
+                          description: The group/package that the kind is part of.
+                        version:
+                          type: string
+                          description: The version of the group/package.
+                        kind:
+                          type: string
+                          description: The object type within the group/package.
+                      required:
+                        - kind
+                      description: >-
+                        Denotes an elasticity strategy kind that employs
+                        horizontal scaling.
+                    - type: object
+                      additionalProperties: false
+                      properties:
+                        group:
+                          type: string
+                          description: The group/package that the kind is part of.
+                        version:
+                          type: string
+                          description: The version of the group/package.
+                        kind:
+                          type: string
+                          description: The object type within the group/package.
+                      required:
+                        - kind
+                      description: >-
+                        Denotes an elasticity strategy kind that employs
+                        vertical scaling.
+                elasticityDecisionLogic:
+                  type: object
+                  properties:
+                    group:
+                      type: string
+                      description: The group/package that the kind is part of.
+                    version:
+                      type: string
+                      description: The version of the group/package.
+                    kind:
+                      type: string
+                      description: The object type within the group/package.
+                  required:
+                    - kind
             apiVersion:
               type: string
               description: >-
