@@ -1,5 +1,9 @@
 import { PolarisRuntime } from '@polaris-sloc/core';
-import {CpuUtilizationSloMapping} from './slo-mappings/cpu-utilization.slo-mapping.prm';
+import {
+  CpuUtilizationSloMapping, PriorityDecisionLogic,
+  RandomDecisionLogic,
+  RoundRobinDecisionLogic, ThresholdBasedDecisionLogic, TimeAwareDecisionLogic
+} from './slo-mappings/cpu-utilization.slo-mapping.prm';
 import {AverageCpuUtilizationMetricMapping} from './metrics/average-cpu-utilization-metric.prm';
 
 /**
@@ -14,5 +18,24 @@ export function initPolarisLib(polarisRuntime: PolarisRuntime): void {
     new CpuUtilizationSloMapping().objectKind,
     CpuUtilizationSloMapping
   );
-  //TODO: register decisionLogic objectkinds
+  polarisRuntime.transformer.registerObjectKind(
+    new RoundRobinDecisionLogic(),
+    RoundRobinDecisionLogic
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new RandomDecisionLogic(),
+    RandomDecisionLogic
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new PriorityDecisionLogic(),
+    PriorityDecisionLogic
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new TimeAwareDecisionLogic(),
+    TimeAwareDecisionLogic
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new ThresholdBasedDecisionLogic(),
+    ThresholdBasedDecisionLogic
+  );
 }
