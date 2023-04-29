@@ -1,17 +1,22 @@
 {
+  "name": "average-cpu-utilization-metric-controller",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/average-cpu-utilization-metric-controller/src",
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/node:webpack",
+      "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/average-cpu-utilization-metric-controller",
         "main": "apps/average-cpu-utilization-metric-controller/src/main.ts",
         "tsConfig": "apps/average-cpu-utilization-metric-controller/tsconfig.app.json",
         "assets": ["apps/average-cpu-utilization-metric-controller/src/assets"],
-        "externalDependencies": "none"
+        "isolatedConfig": true,
+        "webpackConfig": "apps/average-cpu-utilization-metric-controller/webpack.config.js",
+        "externalDependencies": "none",
+        "target": "node",
+        "compiler": "tsc"
       },
       "configurations": {
         "production": {
@@ -28,7 +33,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/node:node",
+      "executor": "@nx/node:node",
       "options": {
         "buildTarget": "average-cpu-utilization-metric-controller:build"
       },
@@ -39,7 +44,7 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
@@ -48,8 +53,10 @@
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/average-cpu-utilization-metric-controller"],
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/apps/average-cpu-utilization-metric-controller"
+      ],
       "options": {
         "jestConfig": "apps/average-cpu-utilization-metric-controller/jest.config.ts",
         "passWithNoTests": true

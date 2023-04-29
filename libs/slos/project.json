@@ -1,40 +1,42 @@
 {
+  "name": "slos",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/slos/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/slos",
         "main": "libs/slos/src/index.ts",
         "tsConfig": "libs/slos/tsconfig.lib.json",
-        "assets": ["libs/slos/*.md"]
+        "assets": ["libs/slos/*.md"],
+        "isolatedConfig": true,
+        "webpackConfig": "libs/slos/webpack.config.js"
       }
     },
     "publish": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "node tools/scripts/publish.mjs slos {args.ver} {args.tag}"
       },
       "dependsOn": [
         {
-          "projects": "self",
           "target": "build"
         }
       ]
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/slos/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/slos"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/slos"],
       "options": {
         "jestConfig": "libs/slos/jest.config.ts",
         "passWithNoTests": true

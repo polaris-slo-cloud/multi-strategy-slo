@@ -1,17 +1,22 @@
 {
+  "name": "average-cpu-utilization",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/average-cpu-utilization/src",
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/node:webpack",
+      "executor": "@nx/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/apps/average-cpu-utilization",
         "main": "apps/average-cpu-utilization/src/main.ts",
         "tsConfig": "apps/average-cpu-utilization/tsconfig.app.json",
         "assets": ["apps/average-cpu-utilization/src/assets"],
-        "externalDependencies": "none"
+        "isolatedConfig": true,
+        "webpackConfig": "apps/average-cpu-utilization/webpack.config.js",
+        "externalDependencies": "none",
+        "target": "node",
+        "compiler": "tsc"
       },
       "configurations": {
         "production": {
@@ -28,7 +33,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/node:node",
+      "executor": "@nx/node:node",
       "options": {
         "buildTarget": "average-cpu-utilization:build"
       },
@@ -39,15 +44,15 @@
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["apps/average-cpu-utilization/**/*.ts"]
       }
     },
     "test": {
-      "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/average-cpu-utilization"],
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/average-cpu-utilization"],
       "options": {
         "jestConfig": "apps/average-cpu-utilization/jest.config.ts",
         "passWithNoTests": true

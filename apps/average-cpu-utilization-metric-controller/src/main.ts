@@ -10,7 +10,7 @@ import {
   convertToNumber,
   getEnvironmentVariable,
 } from '@polaris-sloc/core';
-// eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { initPolarisKubernetes } from '@polaris-sloc/kubernetes';
 import {
   PrometheusComposedMetricsCollectorManager,
