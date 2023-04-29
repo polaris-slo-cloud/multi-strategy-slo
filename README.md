@@ -1,19 +1,19 @@
 # Average CPU Utilization SLO with multiple elasticity strategies
 
 A customer can specify a target CPU utilization service level objective for a target object using the [Polaris Cloud SLO Framework](https://github.com/polaris-slo-cloud/polaris).
-The SLO controller measures the average CPU usage accross all pods of the target objects over a 5 minute duration. Both composed metrics and time serires queries are used to not only gather CPU utilization percentage, but also to collect available resources per container accross all nodes, on which the pods are present.
+The SLO controller measures the average CPU usage of the target deployment over a configurable duration. 
 
-The elasticity strategy controller and slo contoller are connected by a subtype of SloCompliance containing *currSloCompliancePercentage* and *maxAllocatableCpuMillis*. This mapping is then used by a so called MultiElasticityStrategy that scales the target object vertically as well as horizontally.
+The CpuUtilizationSloMapping allows you to choose a predefined decision logic or implement you own rules by implementing an instance of ElasticityDecisionLogic.
+After the SLO compliance has been calculated the AverageCpuUtilization SLO controller uses the decision logic to select a suitable elasticity strategy that is applied to the workload.
+It is possible to provide extra configuration for the decision logic execution by defining static configuration. 
+Furthermore, the decision of which elasticity strategy to use can involve any API request thereby allowing a simple and flexible way to build information rich logics.
 
-MultiElasticityStrategy uses the *maxAllocatableCpuMillis* and static configuration provided by the customer to decide whether to scale vertically or horizontally. Vertical scaling is favored over horizontal scaling meaning the target is scaled up or down if it is within the specified bounds. If vertical scaling would violate any resource constraints or static configuration properties, horizontal scaling is applied. The vertical scaling strategy is fair, therefore every container gets the same resource allocation.
 
-Important note: the elasticity strategy does not scale memory vertically!
-
-In order to scrape metrics correctly, the target objects need to have resource limits configured, which is then automatically changed by the MultiElasticityStrategy.
+In order to scrape metrics correctly, the target objects need to have resource limits configured, which is then automatically changed by the elasticity strategies.
 
 ## Prerequisite
 
-- node 16
+- node 18
 - any virtualization software
 - Debian install image
 
