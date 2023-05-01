@@ -7,6 +7,7 @@ metadata:
     component: average-cpu-utilization-metric-controller
     tier: control-plane
     polaris-controller-type: composed-metric
+    release: prometheus
     # If your Prometheus is configured with a selector for ServiceMonitors, add the required labels here
     # See this issue from the old prometheus-operator, which applies to the current kube-prometheus-stack as well:
     # https://github.com/prometheus-operator/prometheus-operator/issues/1470#issuecomment-397500048
