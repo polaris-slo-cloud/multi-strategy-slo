@@ -166,28 +166,22 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
     super({kind: 'RoundRobinDecisionLogic'});
   }
 
-  private executedStrategy: HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind;
+  private strategies: HorizontalElasticityStrategyKind[] | VerticalElasticityStrategyKind[];
+  private currentIndex: number;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
 
   configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
-    this.executedStrategy = this.sloMappingSpec.primaryElasticityStrategy;
+    this.strategies = [this.sloMappingSpec.primaryElasticityStrategy, this.sloMappingSpec.secondaryElasticityStrategy];
+    this.currentIndex = 0;
     return of(null);
   }
 
   selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
-    const primaryStrategy = this.sloMappingSpec.primaryElasticityStrategy;
-    const secondaryStrategy = this.sloMappingSpec.secondaryElasticityStrategy;
-    let selectedStrategy;
-
-    if (this.executedStrategy === primaryStrategy) {
-      selectedStrategy = primaryStrategy;
-      this.executedStrategy = secondaryStrategy;
-    } else {
-      selectedStrategy = secondaryStrategy;
-      this.executedStrategy = primaryStrategy;
+    if (this.currentIndex == this.strategies.length) {
+      this.currentIndex = 0;
     }
-    return Promise.resolve(selectedStrategy);
+    return Promise.resolve(this.strategies[this.currentIndex++]);
   }
 
 }
