@@ -14,6 +14,7 @@ export default new CpuUtilizationSloMapping({
       kind: 'Deployment',
       name: 'http-stress',
     }),
+    elasticityStrategy: new VerticalElasticityStrategyKind(),
     primaryElasticityStrategy: new HorizontalElasticityStrategyKind(),
     secondaryElasticityStrategy: new VerticalElasticityStrategyKind(),
     elasticityDecisionLogic: new RoundRobinDecisionLogic(),
