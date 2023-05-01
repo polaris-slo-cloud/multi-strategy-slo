@@ -39,7 +39,7 @@ spec:
           name: slo-controller
           resources:
             limits:
-              cpu: 1000m
+              cpu: 250m
               memory: 512Mi
           env:
             # The hostname and port of the Prometheus service:

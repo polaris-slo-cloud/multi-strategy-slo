@@ -39,8 +39,8 @@ spec:
           name: elasticity-controller
           resources:
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 250m
+              memory: 256Mi
           securityContext:
             privileged: false
           env:

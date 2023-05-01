@@ -161,84 +161,58 @@ spec:
 
                     ``` new MySloMapping({      elasticityStrategy: new
                     ElasticityStrategyKind({          kind:
-                    'my-special-elasticity-strategy-kind',          ...     
+                    'my-special-elasticity-strategy-kind',          ...
                     }),      ...,      staticElasticityStrategyConfig:
                     {          // Anything in here will be copied over to the
                     `staticConfig` property of the elasticity strategy
                     spec.          maxReplicas: 100,      }, }); ```
                   x-kubernetes-preserve-unknown-fields: true
                 primaryElasticityStrategy:
-                  anyOf:
-                    - type: object
-                      additionalProperties: false
-                      properties:
-                        group:
-                          type: string
-                          description: The group/package that the kind is part of.
-                        version:
-                          type: string
-                          description: The version of the group/package.
-                        kind:
-                          type: string
-                          description: The object type within the group/package.
-                      required:
-                        - kind
+                  type: object
+                  required:
+                    - kind
+                    - apiVersion
+                  description: Identifies an elasticity strategy kind/type.
+                  properties:
+                    kind:
+                      type: string
                       description: >-
-                        Denotes an elasticity strategy kind that employs
-                        horizontal scaling.
-                    - type: object
-                      additionalProperties: false
-                      properties:
-                        group:
-                          type: string
-                          description: The group/package that the kind is part of.
-                        version:
-                          type: string
-                          description: The version of the group/package.
-                        kind:
-                          type: string
-                          description: The object type within the group/package.
-                      required:
-                        - kind
+                        Kind is a string value representing the REST resource
+                        this object represents. Servers may infer this from the
+                        endpoint the client submits requests to. Cannot be
+                        updated. In CamelCase. More info:
+                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    apiVersion:
+                      type: string
                       description: >-
-                        Denotes an elasticity strategy kind that employs
-                        vertical scaling.
+                        APIVersion defines the versioned schema of this
+                        representation of an object. Servers should convert
+                        recognized schemas to the latest internal value, and may
+                        reject unrecognized values. More info:
+                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                 secondaryElasticityStrategy:
-                  anyOf:
-                    - type: object
-                      additionalProperties: false
-                      properties:
-                        group:
-                          type: string
-                          description: The group/package that the kind is part of.
-                        version:
-                          type: string
-                          description: The version of the group/package.
-                        kind:
-                          type: string
-                          description: The object type within the group/package.
-                      required:
-                        - kind
+                  type: object
+                  required:
+                    - kind
+                    - apiVersion
+                  description: Identifies an elasticity strategy kind/type.
+                  properties:
+                    kind:
+                      type: string
                       description: >-
-                        Denotes an elasticity strategy kind that employs
-                        horizontal scaling.
-                    - type: object
-                      additionalProperties: false
-                      properties:
-                        group:
-                          type: string
-                          description: The group/package that the kind is part of.
-                        version:
-                          type: string
-                          description: The version of the group/package.
-                        kind:
-                          type: string
-                          description: The object type within the group/package.
-                      required:
-                        - kind
+                        Kind is a string value representing the REST resource
+                        this object represents. Servers may infer this from the
+                        endpoint the client submits requests to. Cannot be
+                        updated. In CamelCase. More info:
+                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    apiVersion:
+                      type: string
                       description: >-
-                        Denotes an elasticity strategy kind that employs
-                        vertical scaling.
+                        APIVersion defines the versioned schema of this
+                        representation of an object. Servers should convert
+                        recognized schemas to the latest internal value, and may
+                        reject unrecognized values. More info:
+                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                 elasticityDecisionLogic:
                   type: object
                   properties:

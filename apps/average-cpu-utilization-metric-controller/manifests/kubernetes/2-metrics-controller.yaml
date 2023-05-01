@@ -36,12 +36,12 @@ spec:
           operator: Exists
           effect: NoSchedule
       containers:
-        - image: polarissloc/average-cpu-utilization-metric-controller:latest
+        - image: stvnkiss/average-cpu-utilization-metric-controller:latest
           name: metrics-controller
           resources:
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: 250m
+              memory: 250Mi
           ports:
             - name: metrics
               containerPort: 3000
