@@ -28,15 +28,19 @@ export interface CpuUtilizationSloConfig {
   targetUtilizationPercentage: number;
 }
 
-export abstract class ElasticityDecisionLogic<C, O, T extends SloTarget, S extends ElasticityStrategyKind<O,  T>> extends ObjectKind{
+export class ElasticityDecisionLogic<C, O, T extends SloTarget, S extends ElasticityStrategyKind<O,  T>> extends ObjectKind{
 
   constructor(initData?: Partial<ElasticityDecisionLogic<C, O, T, S>>) {
     super(initData);
   }
 
-  abstract selectElasticityStrategy(sloOutput: O): Promise<S>;
+  selectElasticityStrategy(sloOutput: O): Promise<S> {
+    return Promise.resolve(null);
+  }
 
-  abstract configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<C, O>, metricsSource: MetricsSource): ObservableOrPromise<void>;
+  configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<C, O>, metricsSource: MetricsSource): ObservableOrPromise<void> {
+    return of(null);
+  }
 }
 
 //TODO: GradientBasedDecisionLogic -> sudden change horizontal, constant: vertical -> new metric
@@ -287,8 +291,11 @@ export abstract class MultiElasticitySloMappingSpec<C, O, T extends SloTarget, S
     super(initData);
   }
 
+  @PolarisType(() => ElasticityStrategyKind)
   primaryElasticityStrategy: S;
+  @PolarisType(() => ElasticityStrategyKind)
   secondaryElasticityStrategy: S;
+  @PolarisType(() => ElasticityDecisionLogic)
   elasticityDecisionLogic: ElasticityDecisionLogic<C, O, T, S>
 }
 

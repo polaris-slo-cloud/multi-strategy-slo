@@ -29,7 +29,8 @@ rules:
   - apiGroups:
       - elasticity.polaris-slo-cloud.github.io
     resources:
-      - multielasticitystrategies
+      - verticalelasticitystrategies
+      - horizontalelasticitystrategies
     verbs:
       - get
       - watch

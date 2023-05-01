@@ -16,14 +16,14 @@ metadata:
   name: average-cpu-utilization
 rules:
   # Allow reading all SLO mappings
-  - apiGroups:
-    - slo.polaris-slo-cloud.github.io
-    resources:
-      - "*"
-    verbs:
-      - get
-      - watch
-      - list
+  # - apiGroups:
+  #   - slo.polaris-slo-cloud.github.io
+  #   resources:
+  #   - "*"
+  #   verbs:
+  #   - get
+  #   - watch
+  #   - list
 
   # Allow reading supported SLO mappings
   - apiGroups:
