@@ -115,7 +115,7 @@ export class ThresholdBasedDecisionLogic extends ElasticityDecisionLogic<
   HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
 
-  constructor(private initData?: Partial<ThresholdBasedDecisionLogic>) {
+  constructor(initData?: Partial<ThresholdBasedDecisionLogic>) {
     super({kind: 'ThresholdBasedDecisionLogic', ...initData});
   }
 
@@ -244,7 +244,7 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
     const maxReplicas = this.maxReplicas ?? config.maxReplicas;
     const minReplicas = this.minReplicas ?? config.minReplicas;
 
-    return !(scaleDirection === 'UP' && currentReplicas === maxReplicas || currentReplicas === minReplicas);
+    return !(scaleDirection === 'UP' && currentReplicas >= maxReplicas || currentReplicas <= minReplicas);
 
   }
 
@@ -256,14 +256,10 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
     const maxResources = this.maxResources ?? config.maxResources as Resources;
     const minResources = this.minResources ?? config.minResources as Resources;
 
-    const isResourceLimitReached = (resourceLimit: Resources) => {
-      return currentResources.memoryMiB === resourceLimit.memoryMiB || currentResources.milliCpu === resourceLimit.milliCpu;
-    }
-
     if (scaleDirection === 'UP') {
-      return isResourceLimitReached(maxResources);
+      return currentResources.memoryMiB < maxResources.memoryMiB || currentResources.milliCpu < maxResources.milliCpu;
     } else {
-      return isResourceLimitReached(minResources);
+      return currentResources.memoryMiB > minResources.memoryMiB || currentResources.milliCpu > minResources.milliCpu;
     }
   }
 
