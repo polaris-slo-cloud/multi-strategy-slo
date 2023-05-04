@@ -204,6 +204,7 @@ spec:
                       description: The object type within the group/package.
                   required:
                     - kind
+                  x-kubernetes-preserve-unknown-fields: true
             apiVersion:
               type: string
               description: >-
