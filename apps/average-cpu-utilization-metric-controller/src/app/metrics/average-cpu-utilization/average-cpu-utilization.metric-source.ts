@@ -8,13 +8,6 @@ import { AverageCpuUtilization, AverageCpuUtilizationParams } from '@org/slos';
 import { Observable } from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
 
-// ToDo:
-// 1. Adapt the list of `supportedSloTargetTypes` in `AverageCpuUtilizationMetricSourceFactory` (see average-cpu-utilization.metric-source.factory.ts).
-// 2. Adapt the `AverageCpuUtilizationMetricSourceFactory.metricSourceName`, if needed (e.g., if there are multiple sources for AverageCpuUtilizationMetric that differ
-//    based on the supported SloTarget types).
-// 3. Implement `AverageCpuUtilizationMetricSource.getValueStream()` to compute the metric.
-// 4. Adapt the `release` label in `../../../../manifests/kubernetes/3-service-monitor.yaml` to ensure that Prometheus will scrape this controller.
-
 /**
  * Computes the `AverageCpuUtilization` composed metric.
  */

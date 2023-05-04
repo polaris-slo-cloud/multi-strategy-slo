@@ -23,17 +23,6 @@ export class AverageCpuUtilizationMetricSourceFactory
       AverageCpuUtilizationParams
     >
 {
-  // ToDo:
-  // - Adapt this list, if necessary.
-  // - To register this factory with the `MetricsSourcesManager` (needed if the metric source should execute in the current process
-  //   and be available through `MetricSource.getComposedMetricSource()`, add the following code to your `initPolarisLib()` function
-  //   or to your `main.ts`:
-  //   ```
-  //   AverageCpuUtilizationMetricSourceFactory.supportedSloTargetTypes.forEach(
-  //       sloTargetType => runtime.metricsSourcesManager.addComposedMetricSourceFactory(new AverageCpuUtilizationMetricSourceFactory(), sloTargetType),
-  //   );
-  //   ```
-  //
   /**
    * The list of supported `SloTarget` types.
    *
