@@ -1,5 +1,5 @@
 import {ApiObjectMetadata, SloTarget} from '@polaris-sloc/core';
-import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, RoundRobinDecisionLogic,} from '@org/slos';
+import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, Day, TimeAwareDecisionLogic,} from '@org/slos';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
 
 export default new CpuUtilizationSloMapping({
@@ -14,10 +14,11 @@ export default new CpuUtilizationSloMapping({
       kind: 'Deployment',
       name: 'http-stress',
     }),
-    elasticityStrategy: new VerticalElasticityStrategyKind(),
-    primaryElasticityStrategy: new HorizontalElasticityStrategyKind(),
+    elasticityStrategy: new HorizontalElasticityStrategyKind(),
     secondaryElasticityStrategy: new VerticalElasticityStrategyKind(),
-    elasticityDecisionLogic: new RoundRobinDecisionLogic(),
+    elasticityDecisionLogic: new TimeAwareDecisionLogic({
+      elasticityStrategyDay: [Day.FRIDAY, Day.MONDAY, Day.SATURDAY],
+    }),
     sloConfig: {
       targetUtilizationPercentage: 50
     },

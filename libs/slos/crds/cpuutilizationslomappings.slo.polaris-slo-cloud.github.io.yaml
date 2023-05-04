@@ -167,29 +167,6 @@ spec:
                     `staticConfig` property of the elasticity strategy
                     spec.          maxReplicas: 100,      }, }); ```
                   x-kubernetes-preserve-unknown-fields: true
-                primaryElasticityStrategy:
-                  type: object
-                  required:
-                    - kind
-                    - apiVersion
-                  description: Identifies an elasticity strategy kind/type.
-                  properties:
-                    kind:
-                      type: string
-                      description: >-
-                        Kind is a string value representing the REST resource
-                        this object represents. Servers may infer this from the
-                        endpoint the client submits requests to. Cannot be
-                        updated. In CamelCase. More info:
-                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-                    apiVersion:
-                      type: string
-                      description: >-
-                        APIVersion defines the versioned schema of this
-                        representation of an object. Servers should convert
-                        recognized schemas to the latest internal value, and may
-                        reject unrecognized values. More info:
-                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                 secondaryElasticityStrategy:
                   type: object
                   required:
@@ -213,6 +190,7 @@ spec:
                         recognized schemas to the latest internal value, and may
                         reject unrecognized values. More info:
                         https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+#TODO: fix yaml schema
                 elasticityDecisionLogic:
                   type: object
                   properties:
