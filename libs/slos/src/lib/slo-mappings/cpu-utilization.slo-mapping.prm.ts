@@ -1,5 +1,5 @@
 import {
-  initSelf,
+  initSelf, Logger,
   MetricsSource,
   NamespacedObjectReference,
   ObjectKind,
@@ -87,6 +87,9 @@ export class TimeAwareDecisionLogic extends ElasticityDecisionLogic<
     } else if (isSecondaryEnabledToday) {
       return Promise.resolve(this.sloMappingSpec.secondaryElasticityStrategy);
     }
+    Logger.log("Setting sloCompliancePercentage to 100 to avoid any scaling")
+    sloOutput.currSloCompliancePercentage = 100;
+    //primary strategy will be chosen
     return Promise.resolve(null);
   }
 
