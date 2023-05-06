@@ -1,19 +1,25 @@
 import { PolarisRuntime } from '@polaris-sloc/core';
 import {
-  CpuUtilizationSloMapping, PriorityDecisionLogic,
+  CpuUtilizationSloMapping, ElasticityDecisionLogic, PriorityDecisionLogic,
   RandomDecisionLogic,
   RoundRobinDecisionLogic, ThresholdBasedDecisionLogic, TimeAwareDecisionLogic
 } from './slo-mappings/cpu-utilization.slo-mapping.prm';
 import {AverageCpuUtilizationMetricMapping} from './metrics/average-cpu-utilization-metric.prm';
+import {ElasticityDecisionLogicTransformer} from "./transformer/elasticity-decision-logic.transformer";
 
 /**
  * Initializes this library and registers its types with the transformer in the `PolarisRuntime`.
  */
 export function initPolarisLib(polarisRuntime: PolarisRuntime): void {
+  registerObjectKinds(polarisRuntime);
+  registerPolarisTransformers(polarisRuntime);
+}
+
+function registerObjectKinds(polarisRuntime: PolarisRuntime) {
   polarisRuntime.transformer.registerObjectKind(
     new AverageCpuUtilizationMetricMapping().objectKind,
-    AverageCpuUtilizationMetricMapping);
-
+    AverageCpuUtilizationMetricMapping
+  );
   polarisRuntime.transformer.registerObjectKind(
     new CpuUtilizationSloMapping().objectKind,
     CpuUtilizationSloMapping
@@ -37,5 +43,13 @@ export function initPolarisLib(polarisRuntime: PolarisRuntime): void {
   polarisRuntime.transformer.registerObjectKind(
     new ThresholdBasedDecisionLogic(),
     ThresholdBasedDecisionLogic
+  );
+}
+
+function registerPolarisTransformers(polarisRuntime: PolarisRuntime) {
+  polarisRuntime.transformer.registerTransformer(
+    ElasticityDecisionLogic,
+    new ElasticityDecisionLogicTransformer(),
+    { inheritable: true }
   );
 }

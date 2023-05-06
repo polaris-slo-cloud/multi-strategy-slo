@@ -9,10 +9,10 @@ import {
 import {
   ComposedMetricSource,
   createOwnerReference,
-  ElasticityStrategyKind, Logger,
+  ElasticityStrategyKind,
   MetricsSource,
   ObservableOrPromise,
-  OrchestratorGateway, PolarisConstructor, PolarisTransformationService,
+  OrchestratorGateway,
   ServiceLevelObjective,
   SloCompliance,
   SloMapping,
@@ -33,7 +33,6 @@ export class CpuUtilizationSlo
   private metricsSource: MetricsSource;
   private averageCpuUtilizationMetricSource: ComposedMetricSource<AverageCpuUtilization>;
   private decisionLogic: ElasticityDecisionLogic<CpuUtilizationSloConfig, SloCompliance, SloTarget, ElasticityStrategyKind<any>>;
-  private transformer: PolarisTransformationService;
 
   configure(
     sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>,
@@ -43,7 +42,6 @@ export class CpuUtilizationSlo
     this.sloMapping = sloMapping;
     this.metricsSource = metricsSource;
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
-    this.transformer = orchestrator.transformer;
 
     const cpuUtilizationParams: AverageCpuUtilizationParams = {
       timeRangeMinutes: 5,
@@ -53,7 +51,6 @@ export class CpuUtilizationSlo
     };
 
     this.averageCpuUtilizationMetricSource = metricsSource.getComposedMetricSource(AverageCpuUtilizationMetric.instance, cpuUtilizationParams);
-    this.decisionLogic = this.transformDecisionLogic(this.sloMappingSpec);
     return this.decisionLogic.configure(orchestrator, sloMapping, metricsSource);
   }
 
@@ -73,11 +70,5 @@ export class CpuUtilizationSlo
   private calculateCompliance(sample: AverageCpuUtilization): number {
     const target = this.sloMapping.spec.sloConfig.targetUtilizationPercentage;
     return Math.ceil((sample.averageCpuUtilization / target) * 100)
-  }
-
-  private transformDecisionLogic(mappingSpec: CpuUtilizationSloMappingSpec): ElasticityDecisionLogic<any, any, any, any> {
-    const decisionLogicCtor: PolarisConstructor<ElasticityDecisionLogic<any, any, any, any>> =
-      this.transformer.getPolarisType(mappingSpec.elasticityDecisionLogic) ?? ElasticityDecisionLogic;
-    return new decisionLogicCtor();
   }
 }
