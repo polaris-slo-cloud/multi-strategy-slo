@@ -9,7 +9,7 @@ import {
 import {
   ComposedMetricSource,
   createOwnerReference,
-  ElasticityStrategyKind,
+  ElasticityStrategyKind, Logger,
   MetricsSource,
   ObservableOrPromise,
   OrchestratorGateway,
@@ -42,6 +42,7 @@ export class CpuUtilizationSlo
     this.sloMapping = sloMapping;
     this.metricsSource = metricsSource;
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
+    this.decisionLogic = this.sloMappingSpec.elasticityDecisionLogic;
 
     const cpuUtilizationParams: AverageCpuUtilizationParams = {
       timeRangeMinutes: 5,
@@ -60,6 +61,7 @@ export class CpuUtilizationSlo
     const compliance = { currSloCompliancePercentage };
 
     const elasticityStrategy = await this.decisionLogic.selectElasticityStrategy(compliance);
+    Logger.log('chosen strategy', elasticityStrategy);
     return {
       sloMapping: this.sloMapping,
       elasticityStrategyParams: compliance,

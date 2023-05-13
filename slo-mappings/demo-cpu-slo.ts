@@ -1,5 +1,5 @@
 import {ApiObjectMetadata, SloTarget} from '@polaris-sloc/core';
-import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, Day, TimeAwareDecisionLogic,} from '@org/slos';
+import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, RoundRobinDecisionLogic,} from '@org/slos';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
 
 export default new CpuUtilizationSloMapping({
@@ -16,11 +16,13 @@ export default new CpuUtilizationSloMapping({
     }),
     elasticityStrategy: new HorizontalElasticityStrategyKind(),
     secondaryElasticityStrategy: new VerticalElasticityStrategyKind(),
-    elasticityDecisionLogic: new TimeAwareDecisionLogic({
-      elasticityStrategyDay: [Day.FRIDAY, Day.MONDAY, Day.SATURDAY],
-    }),
+    elasticityDecisionLogic: new RoundRobinDecisionLogic(),
     sloConfig: {
       targetUtilizationPercentage: 50
+    },
+    stabilizationWindow: {
+      scaleDownSeconds: 0,
+      scaleUpSeconds: 0
     },
     staticElasticityStrategyConfig: {
       maxResources: {
@@ -33,9 +35,6 @@ export default new CpuUtilizationSloMapping({
       },
       minReplicas: 1,
       maxReplicas: 2,
-    }, stabilizationWindow: {
-      scaleDownSeconds: 120,
-      scaleUpSeconds: 60
     }
   }),
 });

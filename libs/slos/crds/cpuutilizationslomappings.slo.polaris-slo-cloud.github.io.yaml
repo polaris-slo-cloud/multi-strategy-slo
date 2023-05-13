@@ -35,7 +35,6 @@ spec:
               required:
                 - elasticityDecisionLogic
                 - elasticityStrategy
-                - primaryElasticityStrategy
                 - secondaryElasticityStrategy
                 - sloConfig
                 - targetRef

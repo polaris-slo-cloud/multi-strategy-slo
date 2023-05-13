@@ -6,6 +6,12 @@ import {
 } from './slo-mappings/cpu-utilization.slo-mapping.prm';
 import {AverageCpuUtilizationMetricMapping} from './metrics/average-cpu-utilization-metric.prm';
 import {ElasticityDecisionLogicTransformer} from "./transformer/elasticity-decision-logic.transformer";
+import {
+  HorizontalElasticityStrategy,
+  HorizontalElasticityStrategyKind,
+  VerticalElasticityStrategy,
+  VerticalElasticityStrategyKind
+} from "@polaris-sloc/common-mappings";
 
 /**
  * Initializes this library and registers its types with the transformer in the `PolarisRuntime`.
@@ -43,6 +49,14 @@ function registerObjectKinds(polarisRuntime: PolarisRuntime) {
   polarisRuntime.transformer.registerObjectKind(
     new ThresholdBasedDecisionLogic(),
     ThresholdBasedDecisionLogic
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new VerticalElasticityStrategyKind(),
+    VerticalElasticityStrategy
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new HorizontalElasticityStrategyKind(),
+    HorizontalElasticityStrategy
   );
 }
 

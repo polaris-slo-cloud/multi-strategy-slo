@@ -25,6 +25,10 @@
     "average-cpu-utilization-metric-controller": {
       "projectType": "composed-metric-controller",
       "tsEntryPoint": "apps/average-cpu-utilization-metric-controller/src/main.ts"
+    },
+    "demo-metric-controller": {
+      "projectType": "composed-metric-controller",
+      "tsEntryPoint": "apps/demo-metric-controller/src/main.ts"
     }
   }
 }

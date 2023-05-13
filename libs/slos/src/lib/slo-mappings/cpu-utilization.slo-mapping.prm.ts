@@ -28,7 +28,7 @@ export interface CpuUtilizationSloConfig {
   targetUtilizationPercentage: number;
 }
 
-export class ElasticityDecisionLogic<C, O, T extends SloTarget, S extends ElasticityStrategyKind<O,  T>> extends ObjectKind{
+export class ElasticityDecisionLogic<C, O, T extends SloTarget, S extends ElasticityStrategyKind<O,  T>> extends ObjectKind {
 
   constructor(initData?: Partial<ElasticityDecisionLogic<C, O, T, S>>) {
     super(initData);
@@ -146,8 +146,8 @@ export class RandomDecisionLogic extends ElasticityDecisionLogic<
   HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
 
-  constructor() {
-    super({kind: 'RandomDecisionLogic'});
+  constructor(initData?: Partial<RandomDecisionLogic>) {
+    super({kind: 'RandomDecisionLogic', ...initData});
   }
 
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
@@ -173,8 +173,8 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
   HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind
 > {
 
-  constructor() {
-    super({kind: 'RoundRobinDecisionLogic'});
+  constructor(initData?: Partial<RoundRobinDecisionLogic>) {
+    super({kind: 'RoundRobinDecisionLogic', ...initData});
   }
 
   private strategies: HorizontalElasticityStrategyKind[] | VerticalElasticityStrategyKind[];
@@ -192,6 +192,7 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
     if (this.currentIndex == this.strategies.length) {
       this.currentIndex = 0;
     }
+    Logger.log('selectElasticityStraegy is executed:', this.currentIndex, this.strategies);
     return Promise.resolve(this.strategies[this.currentIndex++]);
   }
 

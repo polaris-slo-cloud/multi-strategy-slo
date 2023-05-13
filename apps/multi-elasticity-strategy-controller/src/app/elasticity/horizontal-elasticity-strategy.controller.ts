@@ -15,6 +15,9 @@ export class HorizontalElasticityStrategyController extends HorizontalElasticity
   }
 
   protected computeScale(elasticityStrategy: HorizontalElasticityStrategy, currScale: Scale): Promise<Scale> {
-    return Promise.resolve(undefined);
+    const newScale = new Scale(currScale);
+    const multiplier = elasticityStrategy.spec.sloOutputParams.currSloCompliancePercentage / 100;
+    newScale.spec.replicas = Math.ceil(currScale.spec.replicas * multiplier);
+    return Promise.resolve(newScale);
   }
 }
