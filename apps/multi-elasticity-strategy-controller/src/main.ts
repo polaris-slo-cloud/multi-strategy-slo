@@ -5,8 +5,7 @@ import {
 import { Logger } from '@polaris-sloc/core';
 import { initPolarisKubernetes } from '@polaris-sloc/kubernetes';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
-import {HorizontalElasticityStrategyController} from './app/elasticity/horizontal-elasticity-strategy.controller';
-import {VerticalElasticityStrategyController} from './app/elasticity/vertical-elasticity-strategy.controller';
+import {HorizontalElasticityStrategyController, VerticalElasticityStrategyController} from "./app/elasticity";
 
 // Load the KubeConfig and initialize the @polaris-sloc/kubernetes library.
 const k8sConfig = new KubeConfig();

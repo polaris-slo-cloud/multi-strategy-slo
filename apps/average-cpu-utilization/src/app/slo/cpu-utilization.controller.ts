@@ -15,10 +15,11 @@ import {
   OrchestratorGateway,
   ServiceLevelObjective,
   SloCompliance,
-  SloMapping,
+  SloMapping, SloMappingBase, SloMappingSpec,
   SloOutput,
   SloTarget,
 } from '@polaris-sloc/core';
+import {of} from "rxjs";
 
 /**
  * Implements the CpuUtilization SLO.
@@ -52,7 +53,18 @@ export class CpuUtilizationSlo
     };
 
     this.averageCpuUtilizationMetricSource = metricsSource.getComposedMetricSource(AverageCpuUtilizationMetric.instance, cpuUtilizationParams);
-    return this.decisionLogic.configure(orchestrator, sloMapping, metricsSource);
+    return this.configureDecisionLogic(orchestrator, sloMapping, metricsSource);
+  }
+
+  private configureDecisionLogic(
+    orchestrator: OrchestratorGateway,
+    sloMapping: SloMappingBase<SloMappingSpec<CpuUtilizationSloConfig, SloCompliance>>,
+    metricsSource: MetricsSource
+  ): ObservableOrPromise<void> {
+    if (this.decisionLogic) {
+      return this.decisionLogic.configure(orchestrator, sloMapping, metricsSource);
+    }
+    return of(null);
   }
 
   async evaluate(): Promise<SloOutput<SloCompliance>> {
@@ -60,13 +72,20 @@ export class CpuUtilizationSlo
     const currSloCompliancePercentage = this.calculateCompliance(sample.value);
     const compliance = { currSloCompliancePercentage };
 
-    const elasticityStrategy = await this.decisionLogic.selectElasticityStrategy(compliance);
+    const elasticityStrategy = await this.selectStrategy(compliance);
     Logger.log('chosen strategy', elasticityStrategy);
     return {
       sloMapping: this.sloMapping,
       elasticityStrategyParams: compliance,
       elasticityStrategy
     };
+  }
+
+  private selectStrategy(compliance: { currSloCompliancePercentage: number }): Promise<ElasticityStrategyKind<any>> {
+    if (this.decisionLogic) {
+      return this.decisionLogic.selectElasticityStrategy(compliance);
+    }
+    return Promise.resolve(null);
   }
 
   private calculateCompliance(sample: AverageCpuUtilization): number {
