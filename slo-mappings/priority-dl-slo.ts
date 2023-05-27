@@ -1,6 +1,24 @@
 import {ApiObjectMetadata, SloTarget} from '@polaris-sloc/core';
-import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, RoundRobinDecisionLogic,} from '@org/slos';
+import {
+  CpuUtilizationSloMapping,
+  CpuUtilizationSloMappingSpec,
+  PriorityDecisionLogic,
+  RoundRobinDecisionLogic,
+} from '@org/slos';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
+
+const elasticityConfig = {
+  maxResources: {
+    milliCpu: 200,
+    memoryMiB: 100
+  },
+  minResources: {
+    milliCpu: 50,
+    memoryMiB: 50
+  },
+  minReplicas: 1,
+  maxReplicas: 10,
+}
 
 export default new CpuUtilizationSloMapping({
   metadata: new ApiObjectMetadata({
@@ -16,7 +34,7 @@ export default new CpuUtilizationSloMapping({
     }),
     elasticityStrategy: new HorizontalElasticityStrategyKind(),
     secondaryElasticityStrategy: new VerticalElasticityStrategyKind(),
-    elasticityDecisionLogic: new RoundRobinDecisionLogic(),
+    elasticityDecisionLogic: new PriorityDecisionLogic(elasticityConfig),
     sloConfig: {
       targetUtilizationPercentage: 50
     },
@@ -24,17 +42,6 @@ export default new CpuUtilizationSloMapping({
       scaleDownSeconds: 0,
       scaleUpSeconds: 0
     },
-    staticElasticityStrategyConfig: {
-      maxResources: {
-        milliCpu: 250,
-        memoryMiB: 250
-      },
-      minResources: {
-        milliCpu: 150,
-        memoryMiB: 150
-      },
-      minReplicas: 1,
-      maxReplicas: 2,
-    }
+    staticElasticityStrategyConfig: elasticityConfig
   }),
 });

@@ -25,6 +25,17 @@ rules:
   #   - watch
   #   - list
 
+  # Allow reading all Deployments, StatefulSets, ReplicaSets, and DaemonSets
+  - apiGroups:
+      - 'apps'
+    resources:
+      - deployments
+      - statefulsets
+      - replicasets
+      - daemonsets
+    verbs:
+      - get
+
   # Allow reading supported SLO mappings
   - apiGroups:
       - slo.polaris-slo-cloud.github.io
