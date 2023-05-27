@@ -1,4 +1,5 @@
 import {
+  ApiObjectMetadata,
   initSelf, Logger,
   MetricsSource,
   NamespacedObjectReference,
@@ -283,7 +284,10 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
         version: targetRef.version,
         kind: targetRef.kind,
       }),
-      metadata: this.sloMapping.metadata
+      metadata: new ApiObjectMetadata({
+        namespace: this.sloMapping.metadata.namespace,
+        name: targetRef.name,
+      }),
     });
 
     const ret = await this.orchestratorClient.read(queryApiObj);
