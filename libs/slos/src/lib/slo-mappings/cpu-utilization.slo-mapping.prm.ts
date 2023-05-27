@@ -235,7 +235,7 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
   }
 
   private isPrimaryElasticityStrategyAvailable(scaleDirection: ScaleDirection): Promise<boolean> {
-    if (this.sloMappingSpec.elasticityStrategy instanceof HorizontalElasticityStrategyKind) {
+    if (this.sloMappingSpec.elasticityStrategy.kind === 'HorizontalElasticityStrategy') {
       return this.isHorizontalElasticityStrategyAvailable(scaleDirection);
     } else {
       return this.isVerticalElasticityStrategyAvailable(scaleDirection);
@@ -249,8 +249,11 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
     const maxReplicas = this.maxReplicas ?? config.maxReplicas;
     const minReplicas = this.minReplicas ?? config.minReplicas;
 
-    return !(scaleDirection === 'UP' && currentReplicas >= maxReplicas || currentReplicas <= minReplicas);
-
+    if (scaleDirection === 'UP') {
+      return currentReplicas < maxReplicas;
+    } else {
+      return currentReplicas > minReplicas;
+    }
   }
 
   private async isVerticalElasticityStrategyAvailable(scaleDirection: ScaleDirection): Promise<boolean> {
