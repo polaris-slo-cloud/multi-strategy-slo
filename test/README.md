@@ -23,7 +23,7 @@ This approach promotes flexibility in terms of testing any predefined values as 
 
 In this example you can see that results of two elasticity strategies: priority decision logic that combines horizontal scaling with vertical scaling and simple horizontal scaling.
 
-![plot](./result/priority_horizontal.png)
+![plot](priority/priority_horizontal.png)
 
 ## Adding Test Cases
 
