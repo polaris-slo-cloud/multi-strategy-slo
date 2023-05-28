@@ -36,24 +36,27 @@ def set_deployment_env_var(deployment_name, name, value):
 
 def create_from_paths(paths):
 	for path in paths:
-		path = f'{os.path.dirname(os.path.abspath(__file__))}/{path}'
 		subprocess.call(['kubectl', 'apply', '-f', path])
 
 
 def delete_from_paths(paths):
 	for path in paths:
-		path = f'{os.path.dirname(os.path.abspath(__file__))}/{path}'
 		subprocess.call(['kubectl', 'delete', '-f', path])
 
 
+def abs_path(file_list):
+	return [f'{os.path.dirname(os.path.abspath(__file__))}/{path}' for path in file_list]
+
+
+
 def setup_polaris():
-	create_from_paths(lib_crds)
-	create_from_paths(apps)
+	create_from_paths(abs_path(lib_crds))
+	create_from_paths(abs_path(apps))
 
 
 def tear_down_polaris():
-	delete_from_paths(apps)
-	delete_from_paths(lib_crds)
+	delete_from_paths(abs_path(apps))
+	delete_from_paths(abs_path(lib_crds))
 
 
 def apply_yaml(yaml_file):
