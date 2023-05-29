@@ -13,12 +13,12 @@ metric_controller_interval_ms = 3000
 prometheus_port = 9090
 
 lib_crds = [
-    	'common/crds'
+    	'testbed/crds'
 	]
 apps = [
-    	'common/average-cpu-utilization',
-    	'common/demo-metric-controller',
-    	'common/multi-elasticity-strategy'
+    	'testbed/average-cpu-utilization',
+    	'testbed/demo-metric-controller',
+    	'testbed/multi-elasticity-strategy'
 	]
 
 
@@ -79,7 +79,7 @@ def setup_prometheus_connection():
 	service = 'service/prometheus-kube-prometheus-prometheus'
 	port = prometheus_port
 	command = ['kubectl', 'port-forward', service, f'{port}:{port}', '-n', 'monitoring']
-	return subprocess.Popen(command)#, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	return subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def query_prometheus(promql_query, start, end):
     url = f'http://localhost:{prometheus_port}/api/v1/query_range'
@@ -89,7 +89,7 @@ def query_prometheus(promql_query, start, end):
     'end': end,
     'step': 5
     }
-    
+
     response = requests.get(url, params=params)
     print(response.url)
     if response.status_code == 200:
@@ -214,7 +214,7 @@ def execute_test(tested, reference, first_value, last_value):
 		plot_samples(axs[1], cpu_req, label[count], 'Workload CPU Request', 'Core')
 		plot_samples(axs[2], mem_req, label[count], 'Workload Memory Request', "Mi")
 		plot_samples(axs[3], pod_count, label[count], 'Workload Size', 'Pod')
-		
+
 
 	plt.tight_layout()
 	plt.show()
@@ -258,7 +258,7 @@ def cleanup_prometheus():
 def run_test(test, reference, data):
 	print("Starting test setup...")
 	proxy = None
-	
+
 	try:
 		setup_polaris()
 		create_from_paths(test.yamls)
@@ -279,4 +279,3 @@ def run_test(test, reference, data):
 		cleanup_prometheus()
 		if proxy is not None:
 			proxy.kill()
-
