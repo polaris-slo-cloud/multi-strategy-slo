@@ -132,7 +132,8 @@ export class ThresholdBasedDecisionLogic extends ElasticityDecisionLogic<
   }
 
   selectElasticityStrategy(sloOutput: SloCompliance): Promise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
-    const difference = Math.abs(sloOutput.currSloCompliancePercentage - (100 + sloOutput.tolerance ?? 0));
+    const tolerance = sloOutput.tolerance ?? 0;
+    const difference = Math.abs(sloOutput.currSloCompliancePercentage - (100 + tolerance));
     const threshold = this.threshold ?? 50;
     const selected = difference > threshold ? this.sloMappingSpec.elasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy;
     return Promise.resolve(selected);
