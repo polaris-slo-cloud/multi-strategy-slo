@@ -1,4 +1,4 @@
-# Priority Decision Logic
+# Threshold Decision Logic
 
 ## Introduction
 
