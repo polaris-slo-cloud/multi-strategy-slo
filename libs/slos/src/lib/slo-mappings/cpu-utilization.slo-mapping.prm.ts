@@ -1,6 +1,7 @@
 import {
   ApiObjectMetadata,
-  initSelf, Logger,
+  initSelf,
+  Logger,
   MetricsSource,
   NamespacedObjectReference,
   ObjectKind,
@@ -125,9 +126,14 @@ export class ThresholdBasedDecisionLogic extends ElasticityDecisionLogic<
 
   public threshold: number;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
+  private scaleClient: ScaleClient;
 
   configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>, metricsSource: MetricsSource): ObservableOrPromise<void> {
     this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
+    this.scaleClient = new ScaleClient(
+      orchestrator.createOrchestratorClient(),
+      sloMapping
+    );
     return of(null);
   }
 
@@ -135,8 +141,12 @@ export class ThresholdBasedDecisionLogic extends ElasticityDecisionLogic<
     const tolerance = sloOutput.tolerance ?? 0;
     const difference = Math.abs(sloOutput.currSloCompliancePercentage - (100 + tolerance));
     const threshold = this.threshold ?? 50;
-    const selected = difference > threshold ? this.sloMappingSpec.elasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy;
-    return Promise.resolve(selected);
+    const scaleDirection = sloOutput.currSloCompliancePercentage >= 100 ? 'UP' : 'DOWN';
+    const strategy = this.sloMappingSpec.elasticityStrategy;
+    const secondary = this.sloMappingSpec.secondaryElasticityStrategy;
+    return difference > threshold ?
+        this.scaleClient.selectStrategy(strategy, scaleDirection, secondary)
+        : this.scaleClient.selectStrategy(secondary, scaleDirection, strategy);
   }
 
 }
@@ -194,48 +204,55 @@ export class RoundRobinDecisionLogic extends ElasticityDecisionLogic<
     if (this.currentIndex == this.strategies.length) {
       this.currentIndex = 0;
     }
-    Logger.log('selectElasticityStraegy is executed:', this.currentIndex, this.strategies);
     return Promise.resolve(this.strategies[this.currentIndex++]);
   }
 
 }
 
 export type ScaleDirection = 'UP' | 'DOWN';
+export interface ScaleClientConfig {
+  maxResources: Resources;
+  minResources: Resources;
+  maxReplicas: number;
+  minReplicas: number;
+}
 
-export class PriorityDecisionLogic extends ElasticityDecisionLogic<
-  CpuUtilizationSloConfig,
-  SloCompliance,
-  SloTarget,
-  VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind
-> {
+export class ScaleClient {
 
-  constructor(initData?: Partial<PriorityDecisionLogic>) {
-    super({kind: 'PriorityDecisionLogic', ...initData});
+  constructor(
+    private orchestratorClient: OrchestratorClient,
+    private sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>,
+    private config?: ScaleClientConfig
+  ) {
+    this.queryMap = new Map();
+    this.sloMappingSpec = this.sloMapping.spec as CpuUtilizationSloMappingSpec
+    this.registerStrategies();
   }
 
-  public maxResources: Resources;
-  public minResources: Resources;
-  public maxReplicas: number;
-  public minReplicas: number;
-
-  private orchestratorClient: OrchestratorClient;
+  private queryMap: Map<string, (direction: ScaleDirection) => Promise<boolean>>;
   private sloMappingSpec: CpuUtilizationSloMappingSpec;
-  private sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
 
-  selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
-    const scaleDirection = sloOutput.currSloCompliancePercentage >= 100 ? 'UP' : 'DOWN';
-    return this.isPrimaryElasticityStrategyAvailable(scaleDirection)
-      .then(isPrimary => isPrimary ? this.sloMappingSpec.elasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy);
+  private registerStrategies() {
+    this.queryMap.set('HorizontalElasticityStrategy', (scaleDirection) => this.isHorizontalElasticityStrategyAvailable(scaleDirection));
+    this.queryMap.set('VerticalElasticityStrategy', (scaleDirection) => this.isVerticalElasticityStrategyAvailable(scaleDirection));
   }
 
-  configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {
-    this.orchestratorClient = orchestrator.createOrchestratorClient();
-    this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
-    this.sloMapping = sloMapping;
-    return of(null);
+  public async selectStrategy(strategy: HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind, scaleDirection: ScaleDirection, fallback?: HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind): Promise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
+    const fallbackAvailable = !fallback;
+    const strategyQuery = this.queryMap.get(strategy.kind);
+
+    if (strategyQuery && await strategyQuery(scaleDirection)) {
+      return strategy;
+    } else if (fallbackAvailable) {
+      const fallbackQuery = this.queryMap.get(fallback.kind);
+      const fallbackResult = await fallbackQuery(scaleDirection);
+      return fallbackResult ? fallback : null;
+    } else {
+      return null;
+    }
   }
 
-  private isPrimaryElasticityStrategyAvailable(scaleDirection: ScaleDirection): Promise<boolean> {
+  public isPrimaryStrategyAvailable(scaleDirection: ScaleDirection): Promise<boolean> {
     if (this.sloMappingSpec.elasticityStrategy.kind === 'HorizontalElasticityStrategy') {
       return this.isHorizontalElasticityStrategyAvailable(scaleDirection);
     } else {
@@ -247,8 +264,8 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
     const scale = await this.loadTargetScale();
     const currentReplicas = scale.spec.replicas;
     const config = this.sloMappingSpec.staticElasticityStrategyConfig;
-    const maxReplicas = this.maxReplicas ?? config.maxReplicas;
-    const minReplicas = this.minReplicas ?? config.minReplicas;
+    const maxReplicas = this.config?.maxReplicas ?? config.maxReplicas;
+    const minReplicas = this.config?.minReplicas ?? config.minReplicas;
 
     if (scaleDirection === 'UP') {
       return currentReplicas < maxReplicas;
@@ -262,8 +279,8 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
     const containers = target.spec.template.spec.containers;
     const currentResources = containers[0].resources;
     const config = this.sloMappingSpec.staticElasticityStrategyConfig;
-    const maxResources = this.maxResources ?? config.maxResources as Resources;
-    const minResources = this.minResources ?? config.minResources as Resources;
+    const maxResources = this.config?.maxResources ?? config.maxResources as Resources;
+    const minResources = this.config?.minResources ?? config.minResources as Resources;
 
     if (scaleDirection === 'UP') {
       return currentResources.memoryMiB < maxResources.memoryMiB || currentResources.milliCpu < maxResources.milliCpu;
@@ -299,6 +316,50 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
       throw new Error('The SloTarget does not contain a pod template (spec.template field).');
     }
     return ret;
+  }
+
+}
+
+export class PriorityDecisionLogic extends ElasticityDecisionLogic<
+  CpuUtilizationSloConfig,
+  SloCompliance,
+  SloTarget,
+  VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind
+> {
+
+  constructor(initData?: Partial<PriorityDecisionLogic>) {
+    super({kind: 'PriorityDecisionLogic', ...initData});
+  }
+
+  public maxResources: Resources;
+  public minResources: Resources;
+  public maxReplicas: number;
+  public minReplicas: number;
+
+  private sloMappingSpec: CpuUtilizationSloMappingSpec;
+  private sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
+  private scaleClient: ScaleClient;
+
+  selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
+    const scaleDirection = sloOutput.currSloCompliancePercentage >= 100 ? 'UP' : 'DOWN';
+    return this.scaleClient.isPrimaryStrategyAvailable(scaleDirection)
+      .then(isPrimary => isPrimary ? this.sloMappingSpec.elasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy);
+  }
+
+  configure(orchestrator: OrchestratorGateway, sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>): ObservableOrPromise<void> {
+    this.sloMappingSpec = sloMapping.spec as CpuUtilizationSloMappingSpec;
+    this.sloMapping = sloMapping;
+    this.scaleClient = new ScaleClient(
+      orchestrator.createOrchestratorClient(),
+      sloMapping,
+      {
+        maxResources: this.maxResources,
+        minResources: this.minResources,
+        maxReplicas: this.maxReplicas,
+        minReplicas: this.minReplicas
+      }
+    );
+    return of(null);
   }
 }
 

@@ -46,7 +46,7 @@ export class CpuUtilizationSlo
     this.decisionLogic = this.sloMappingSpec.elasticityDecisionLogic;
 
     const cpuUtilizationParams: AverageCpuUtilizationParams = {
-      timeRangeMinutes: 5,
+      timeRangeMinutes: 2,
       sloTarget: sloMapping.spec.targetRef,
       namespace: sloMapping.metadata.namespace,
       owner: createOwnerReference(sloMapping)
