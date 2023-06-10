@@ -1,0 +1,107 @@
+kind: CustomResourceDefinition
+apiVersion: apiextensions.k8s.io/v1
+metadata:
+  annotations:
+    polaris-slo-cloud.github.io/schema-gen-version: 0.6.0-beta.3
+  name: averagecpuutilizationmetricmappings.metrics.polaris-slo-cloud.github.io
+spec:
+  group: metrics.polaris-slo-cloud.github.io
+  names:
+    kind: AverageCpuUtilizationMetricMapping
+    listKind: AverageCpuUtilizationMetricMappingList
+    singular: averagecpuutilizationmetricmapping
+    plural: averagecpuutilizationmetricmappings
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          required:
+            - metadata
+            - spec
+            - apiVersion
+            - kind
+          description: >-
+            Used to configure a AverageCpuUtilization composed metric controller
+            to compute its metric for a specific target.
+          properties:
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - targetRef
+                - metricConfig
+              description: >-
+                Defines the configuration data for a composed metric mapping
+                that is used for configuring a composed metric controller.
+              properties:
+                targetRef:
+                  type: object
+                  required:
+                    - kind
+                    - name
+                    - apiVersion
+                  description: Identifies that target workload for an SLO mapping.
+                  properties:
+                    kind:
+                      type: string
+                      description: >-
+                        Kind is a string value representing the REST resource
+                        this object represents. Servers may infer this from the
+                        endpoint the client submits requests to. Cannot be
+                        updated. In CamelCase. More info:
+                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+                    name:
+                      type: string
+                      description: The name of the instance.
+                    apiVersion:
+                      type: string
+                      description: >-
+                        APIVersion defines the versioned schema of this
+                        representation of an object. Servers should convert
+                        recognized schemas to the latest internal value, and may
+                        reject unrecognized values. More info:
+                        https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+                metricConfig:
+                  type: object
+                  properties:
+                    timeRangeMinutes:
+                      type: integer
+                      format: int64
+                  required:
+                    - timeRangeMinutes
+                  description: >-
+                    Limited alternative for `Omit<T, K>` that provides a
+                    workaround for an issue with ts-json-schema-generator.
+
+
+                    While ts-json-schema-generator can handle `Omit<SomeType,
+                    K>`, it throws the following error when `SomeType` is itself
+                    a generic parameter: ``` LogicError: Unexpected key type
+                    "undefined" for type "{     [P in K]: T[P]; }" (expected
+                    "UnionType" or "StringType") ```
+
+
+                    `CrdOmit` does not remove the properties from `T` like
+                    `Omit` would, but it's workaround that works with
+                    ts-json-schema-generator.
+            apiVersion:
+              type: string
+              description: >-
+                APIVersion defines the versioned schema of this representation
+                of an object. Servers should convert recognized schemas to the
+                latest internal value, and may reject unrecognized values. More
+                info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            kind:
+              type: string
+              description: >-
+                Kind is a string value representing the REST resource this
+                object represents. Servers may infer this from the endpoint the
+                client submits requests to. Cannot be updated. In CamelCase.
+                More info:
+                https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
