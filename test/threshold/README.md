@@ -45,6 +45,12 @@ At the later stages of the test, the limit for vertical scaling is reached, ther
 
 ### Cost Efficiency
 
+| Workload      | Min | Max  |
+|---------------|-----|------|
+| Pod CPU mi    | 250 | 2000 |
+| Pod Memory Mi | 50  | 100  |
+| Scale         | 1   | 10   |
+
 The cost-efficiency factor is further emphasized if a service provider deploys workloads on platforms like Google Cloud's GKE Autopilot that allows highly granular pricing based on Pods instead of individual VMs.
 This model allows the workload to be billed on a per second basis, which outlines the key properties of threshold based scaling.
 In the following example, we show that there can be a significant difference between resource requests for the exact same load. The horizontal scaling requests 2 cores at the early stages of the test run. In contrast to that, the threshold strategy only reaches this value at the end of the test period.
