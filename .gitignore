@@ -39,7 +39,6 @@ testem.log
 Thumbs.db
 /test/.idea/misc.xml
 /test/.idea/modules.xml
-/test/load/priority_dl.png
 /test/.idea/inspectionProfiles/profiles_settings.xml
 /test/.idea/test.iml
 /test/.idea/vcs.xml
