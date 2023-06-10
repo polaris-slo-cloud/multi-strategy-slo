@@ -42,3 +42,12 @@ Therefore the threshold based scaling can easily outperform the simple horizonta
 At the later stages of the test, the limit for vertical scaling is reached, therefore the threshold strategy decides to switch over to horizontal scaling. This makes the threshold scaling strategy to be more robust.
 
 ![plot](threshold_horizontal_constant.png)
+
+### Cost Efficiency
+
+The cost-efficiency factor is further emphasized if a service provider deploys workloads on platforms like Google Cloud's GKE Autopilot that allows highly granular pricing based on Pods instead of individual VMs.
+This model allows the workload to be billed on a per second basis, which outlines the key properties of threshold based scaling.
+In the following example, we show that there can be a significant difference between resource requests for the exact same load. The horizontal scaling requests 2 cores at the early stages of the test run. In contrast to that, the threshold strategy only reaches this value at the end of the test period.
+In the long term this can result in vastly different costs.
+
+![threshold_horizontal_cost.png](threshold_horizontal_cost.png)
