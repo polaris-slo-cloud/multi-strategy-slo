@@ -1,0 +1,32 @@
+kind: CpuUtilizationSloMapping
+apiVersion: slo.polaris-slo-cloud.github.io/v1
+metadata:
+  namespace: polaris
+  name: test-cpu-utilization
+spec:
+  targetRef:
+    kind: Deployment
+    name: test-pause-deployment
+    apiVersion: apps/v1
+  elasticityStrategy:
+    kind: HorizontalElasticityStrategy
+    apiVersion: elasticity.polaris-slo-cloud.github.io/v1
+  secondaryElasticityStrategy:
+    kind: VerticalElasticityStrategy
+    apiVersion: elasticity.polaris-slo-cloud.github.io/v1
+  elasticityDecisionLogic:
+    kind: RandomDecisionLogic
+  sloConfig:
+    targetUtilizationPercentage: 50
+  stabilizationWindow:
+    scaleDownSeconds: 0
+    scaleUpSeconds: 0
+  staticElasticityStrategyConfig:
+    maxResources:
+      milliCpu: 200
+      memoryMiB: 100
+    minResources:
+      milliCpu: 50
+      memoryMiB: 50
+    minReplicas: 1
+    maxReplicas: 10

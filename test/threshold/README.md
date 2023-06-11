@@ -51,9 +51,11 @@ At the later stages of the test, the limit for vertical scaling is reached, ther
 | Pod Memory Mi | 50  | 100  |
 | Scale         | 1   | 10   |
 
-The cost-efficiency factor is further emphasized if a service provider deploys workloads on platforms like Google Cloud's [GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview) that allows highly granular pricing based on Pods instead of individual VMs.
-This model allows the workload to be billed on a per-second basis, which benefits the key properties of threshold based scaling.
+The cost-efficiency factor is further emphasized if a service provider deploys workloads on platforms like Google Cloud's [GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview).
+GKE Autopilot is a fully managed platform that allows highly granular pricing based on Pods meaning that the customer does not have to pay for an entire cluster of VMs, but only for scheduled Pods on Kubernetes.
+The requested resources like CPU, memory and disk are billed on a per-second basis, which benefits the key properties of threshold based scaling. That is capable of adjust resource requests in small portions, but still able to scale rapidly based on the actual conditions.
+At the time of writing GKE Autopilot does not support sophisticated elasticity strategies. Polaris Cloud SLO would be a great extension to the platform to support various strategies based on the requirements of service providers.
 In the following example, we show that there can be a significant difference between resource requests for the exact same load. The horizontal scaling requests 2 cores at the early stages of the test run. In contrast to that, the threshold strategy only reaches this value at the end of the test period.
-In the long term this can result in vastly different costs.
+This can result in vastly different costs in the long term, while the service provider can still comply with its SLOs.
 
 ![threshold_horizontal_cost.png](threshold_horizontal_cost.png)
