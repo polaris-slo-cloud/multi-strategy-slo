@@ -7,6 +7,8 @@ import datetime
 import json
 import threading
 import schedule
+from kubernetes import client, config, watch
+import sys
 
 namespace = 'polaris'
 slo_controller_interval_ms = 5000
@@ -163,7 +165,7 @@ def job(value):
 		print(f"Error during execution: {e}")
 
 
-def generate_load(data):
+def generate_load(data, stop_event):
 	threads = []
 	for value in data:
 		round_start = unix_timestamp()
@@ -172,13 +174,67 @@ def generate_load(data):
 			for i in range(10):
 				job(value)
 				time.sleep(0.1)
+				if stop_event.is_set():
+					return
+
+
+def watch_kubernetes(counter_callback, stop_event, plural):
+	print('watch_kubernetes_object_updates')
+	config.load_kube_config()
+	api_client = client.ApiClient()
+	custom_api = client.CustomObjectsApi()
+	watcher = watch.Watch()
+	print('got watcher')
+
+	try:
+		for event in watcher.stream(custom_api.list_namespaced_custom_object,'elasticity.polaris-slo-cloud.github.io','v1','polaris', plural):
+			print("Event: %s %s" % (event['type'], event['object']))
+			counter_callback(plural)
+			if stop_event.is_set():
+				break
+	except Exception as e:
+		print(f"Error watching Kubernetes object updates: {str(e)}")
+		sys.exit(1)
+	finally:
+		watcher.stop()
+
+
+def observe_load(data):
+	try:
+		global scaling_actions
+		scaling_actions = {}
+		lock = threading.Lock()
+		stop_event_watch = threading.Event()
+		stop_event_load = threading.Event()
+
+		def update_counter(plural):
+			with lock:
+				if plural not in scaling_actions:
+					scaling_actions[plural] = []
+				scaling_actions[plural].append(unix_timestamp())
+
+		v_watcher = threading.Thread(target=watch_kubernetes, args=(update_counter, stop_event_watch, 'verticalelasticitystrategies'), daemon=True)
+		h_watcher = threading.Thread(target=watch_kubernetes, args=(update_counter, stop_event_watch, 'horizontalelasticitystrategies'), daemon=True)
+		load_thread = threading.Thread(target=generate_load, args=(data, stop_event_load), daemon=True)
+		load_thread.start()
+		v_watcher.start()
+		h_watcher.start()
+		load_thread.join()
+		stop_event_watch.set()
+		v_watcher.join()
+		h_watcher.join()
+	finally:
+		stop_event_watch.set()
+		stop_event_load.set()
+
+	return scaling_actions
 
 
 def execute_test(tested, data):
 	print('Starting to track metrics...')
 	start = unix_timestamp()
 
-	generate_load(data)
+	scaling_actions = observe_load(data)
 
 	end = unix_timestamp()
 
@@ -190,6 +246,8 @@ def execute_test(tested, data):
 	plot_samples(axs[0], cpu_usage, 'Actual', 'CPU Usage', 'Percent')
 	plot_samples(axs[0], [[int(sublist[0]), float(target_cpu_usage)] for sublist in cpu_usage], 'Target', 'CPU Usage', 'Percent')
 
+	plot_scaling_actions(axs[0], scaling_actions, start)
+
 	cpu_req = get_cpu_resource_req(deployment, start, end)
 	mem_req = get_mem_resource_req(deployment, start, end)
 	pod_count = get_replica_count(deployment, start, end)
@@ -199,6 +257,16 @@ def execute_test(tested, data):
 	plot_samples(axs[3], pod_count, label, 'Workload Size', 'Pod')
 	plt.tight_layout()
 	plt.show()
+
+
+def plot_scaling_actions(plt, scaling_actions, start):
+	xs = [1, 100]
+	if 'verticalelasticitystrategies' in scaling_actions:
+		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['verticalelasticitystrategies']], ymin = 0, ymax = max(xs),
+           colors = 'red', label = 'Vertical Scaling')
+	if 'horizontalelasticitystrategies' in scaling_actions:
+		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['horizontalelasticitystrategies']], ymin = 0, ymax = max(xs),
+           colors = 'blue', label = 'Horizontal Scaling')
 
 
 def plot_samples(axs, samples, label, title, y_label):
