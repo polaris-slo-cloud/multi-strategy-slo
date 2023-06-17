@@ -6,7 +6,7 @@ metadata:
 spec:
   targetRef:
     kind: Deployment
-    name: test-pause-deployment
+    name: resource-consumer
     apiVersion: apps/v1
   elasticityStrategy:
     kind: HorizontalElasticityStrategy
@@ -29,4 +29,4 @@ spec:
       milliCpu: 50
       memoryMiB: 50
     minReplicas: 1
-    maxReplicas: 10
+    maxReplicas: 5

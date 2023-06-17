@@ -186,13 +186,14 @@ def bytes_to_megabytes(bytes):
 
 
 class SloTest:
-	def __init__(self, name, deployment, yamls):
+	def __init__(self, name, deployment, yamls, result_name):
 		self.name = name
 		self.deployment = deployment
 		self.yamls = yamls
+		self.result_name = result_name
 
 
-def execute_test(tested, reference, first_value, last_value):
+def execute_test(tested, reference, first_value, last_value, result_name):
 	wait_for_value(first_value)
 	print('Starting to track metrics...')
 	start = unix_timestamp()
@@ -215,9 +216,11 @@ def execute_test(tested, reference, first_value, last_value):
 		plot_samples(axs[2], mem_req, label[count], 'Workload Memory Request', "Mi")
 		plot_samples(axs[3], pod_count, label[count], 'Workload Size', 'Pod')
 
-
+	#fig.suptitle(tested.title)
+	axs[3].set_xlabel('Seconds', fontsize=8, loc='right')
 	plt.tight_layout()
-	plt.show()
+	plt.gcf().set_size_inches(8, 6)
+	plt.savefig(f'./result/{result_name}', dpi=200)
 
 
 def plot_samples(axs, samples, label, title, y_label):
@@ -227,10 +230,9 @@ def plot_samples(axs, samples, label, title, y_label):
 		axs.plot(time, value, label=label)
 	else:
 		axs.plot(time, value)
-	axs.set_title(title)
-	axs.set_xlabel('Seconds')
+	axs.legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, fontsize=8)
+	axs.set_title(title, fontsize=8)
 	axs.set_ylabel(y_label)
-	axs.legend()
 
 
 def extract_values(samples):
@@ -255,7 +257,7 @@ def cleanup_prometheus():
 			print(f"Prometheus cleanup failed with status code: {response.status_code}")
 
 
-def run_test(test, reference, data):
+def run_test(test, reference, data, result_name):
 	print("Starting test setup...")
 	proxy = None
 
@@ -268,7 +270,7 @@ def run_test(test, reference, data):
 		print("Setting up Prometheus connection...")
 		proxy = setup_prometheus_connection()
 		print("Executing test...")
-		execute_test(test, reference, data[0], data[-1])
+		execute_test(test, reference, data[0], data[-1], result_name)
 	except Exception as e:
 		print(f"Error during execution: {e}")
 	finally:

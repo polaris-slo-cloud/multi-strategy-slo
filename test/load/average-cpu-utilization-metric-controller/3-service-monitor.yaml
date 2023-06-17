@@ -23,4 +23,4 @@ spec:
       polaris-controller-type: composed-metric
   endpoints:
     - targetPort: metrics
-      interval: 20s
+      interval: 5s

@@ -24,16 +24,16 @@ In this example the primary strategy is horizontal scaling, if the workload scal
 It is clearly visible on the results that the SLO controller scales to workload up if the current utilization exceeds the target.
 Any scaling action is skipped if the current CPU usage hovers near the target CPU usage.
 
-![priority_dl.png](priority.png)
+![priority_dl.png](result/priority.png)
 
 
 ## Random Decision Logic
 
-![random_dl.png](random_dl.png)
+![random_dl.png](result/random_dl.png)
 
 ## Round Robin Decision Logic
 
-![round.png](round.png)
+![round.png](result/round.png)
 
 ## New Resize Policy
 
@@ -56,4 +56,4 @@ The following charts show that in-place resize has a significant impact on workl
 Having no jitters will benefit scaling in a sense that pods can be scheduled even if there is not enough resources to start a new container to replace to old one.
 Thanks to this behavior other workloads are not blocked due to vertical scaling action is replacing pods.
 
-![random_dl_inplace.png](random_dl_inplace.png)
+![random_dl_inplace.png](result/random_dl_inplace.png)

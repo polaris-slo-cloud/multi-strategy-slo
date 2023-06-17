@@ -139,10 +139,12 @@ def bytes_to_megabytes(bytes):
 
 
 class SloTest:
-	def __init__(self, name, deployment, yamls):
+	def __init__(self, name, deployment, yamls, export_file, title=None):
 		self.name = name
 		self.deployment = deployment
 		self.yamls = yamls
+		self.export_file = export_file
+		self.title = title
 
 def job(value):
 	#todo remove server url
@@ -189,9 +191,9 @@ def watch_kubernetes(counter_callback, stop_event, plural):
 	try:
 		for event in watcher.stream(custom_api.list_namespaced_custom_object,'elasticity.polaris-slo-cloud.github.io','v1','polaris', plural):
 			print("Event: %s %s" % (event['type'], event['object']))
-			counter_callback(plural)
 			if stop_event.is_set():
 				break
+			counter_callback(plural)
 	except Exception as e:
 		print(f"Error watching Kubernetes object updates: {str(e)}")
 		sys.exit(1)
@@ -234,10 +236,12 @@ def execute_test(tested, data):
 	scaling_actions = observe_load(data)
 
 	end = unix_timestamp()
+	plot_test_result(tested, start, end, scaling_actions)
 
+
+def plot_test_result(tested, start, end, scaling_actions):
 	deployment = tested.deployment
 	label = tested.name
-
 	fig, axs = plt.subplots(nrows=4, ncols=1, sharex=True)
 	cpu_usage = get_cpu_usage(start, end)
 	plot_scaling_actions(axs[0], scaling_actions, start)
@@ -248,14 +252,20 @@ def execute_test(tested, data):
 	mem_req = get_mem_resource_req(deployment, start, end)
 	pod_count = get_replica_count(deployment, start, end)
 	
-	plot_samples(axs[1], cpu_req, label, 'Workload CPU Request', 'Core')
-	plot_samples(axs[2], mem_req, label, 'Workload Memory Request', "Mi")
-	plot_samples(axs[3], pod_count, label, 'Workload Size', 'Pod')
+	plot_samples(axs[1], cpu_req, None, 'Workload CPU Request', 'Core')
+	plot_samples(axs[2], mem_req, None, 'Workload Memory Request', "Mi")
+	plot_samples(axs[3], pod_count, None, 'Workload Size', 'Pod')
+	axs[0].legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, fontsize=8)
+	axs[3].set_xlabel('Seconds', fontsize=8, loc='right')
+	if tested.title is not None:
+		fig.suptitle(tested.title)
 	plt.tight_layout()
-	plt.show()
+	plt.gcf().set_size_inches(8, 6)
+	plt.savefig(f'./result/{tested.export_file}', dpi=200)
 
 
 def plot_scaling_actions(plt, scaling_actions, start):
+	print(scaling_actions)
 	xs = [1, 100]
 	if 'verticalelasticitystrategies' in scaling_actions:
 		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['verticalelasticitystrategies']], ymin = 0, ymax = max(xs),
@@ -272,10 +282,8 @@ def plot_samples(axs, samples, label, title, y_label):
 		axs.plot(time, value, label=label)
 	else:
 		axs.plot(time, value)
-	axs.set_title(title)
-	axs.set_xlabel('Seconds')
-	axs.set_ylabel(y_label)
-	axs.legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0)
+	axs.set_title(title, fontsize=10)
+	axs.set_ylabel(y_label, fontsize=8)
 
 
 def extract_values(samples):
