@@ -9,6 +9,14 @@ The resulting charts should show that an elasticity strategies are used to estab
 Individual test results can be then compared by the reader.
 Even though reproducibility is an important factor for testing, this approach does not allow testcases to be fully reproduced due to various reasons like I/O errors.
 
+## Environment
+
+The tests presented in this document are executed using minikube with the following configuration:
+
+
+    minikube start --kubernetes-version=v1.27.3 --feature-gates=InPlacePodVerticalScaling=true --container-runtime=containerd
+    minikube addons enable metrics-server
+    minikube addons enable ingress
 
 ## Priority Decision Logic
 
@@ -26,3 +34,20 @@ Any scaling action is skipped if the current CPU usage hovers near the target CP
 ## Round Robin Decision Logic
 
 ![round.png](round.png)
+
+## New Resize Policy
+
+In version 1.27, Kubernetes has introduced its [new alpha feature](https://kubernetes.io/blog/2023/05/12/in-place-pod-resize-alpha/) called in-place pod resize. The new feature enables container resizing without needing any restarts in the pod.
+This comes very handy in situations where an application might require more resources at certain stages of its life e.g. Java applications typically have higher CPU usage upon initialization.
+Not only restarts are avoided, but pending containers due to scaling do not occur, therefore the resource requests of a deployment are not influenced by _pending_ scaling action.
+
+Currently, the feature is available through enabling the feature gate `InPlacePodVerticalScaling` and by configuring the `resizePolicy` of the target workload:
+
+    resizePolicy:
+      - resourceName: cpu
+      restartPolicy: NotRequired
+      - resourceName: memory
+      restartPolicy: RestartContainer
+
+In the example above, if the CPU resource request is changed, the container is not restarted.
+However, when resizing the memory of the container, it is restarted.
