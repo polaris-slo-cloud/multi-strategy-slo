@@ -220,9 +220,6 @@ def observe_load(data):
 		v_watcher.start()
 		h_watcher.start()
 		load_thread.join()
-		stop_event_watch.set()
-		v_watcher.join()
-		h_watcher.join()
 	finally:
 		stop_event_watch.set()
 		stop_event_load.set()
@@ -243,10 +240,9 @@ def execute_test(tested, data):
 
 	fig, axs = plt.subplots(nrows=4, ncols=1, sharex=True)
 	cpu_usage = get_cpu_usage(start, end)
+	plot_scaling_actions(axs[0], scaling_actions, start)
 	plot_samples(axs[0], cpu_usage, 'Actual', 'CPU Usage', 'Percent')
 	plot_samples(axs[0], [[int(sublist[0]), float(target_cpu_usage)] for sublist in cpu_usage], 'Target', 'CPU Usage', 'Percent')
-
-	plot_scaling_actions(axs[0], scaling_actions, start)
 
 	cpu_req = get_cpu_resource_req(deployment, start, end)
 	mem_req = get_mem_resource_req(deployment, start, end)
@@ -263,10 +259,10 @@ def plot_scaling_actions(plt, scaling_actions, start):
 	xs = [1, 100]
 	if 'verticalelasticitystrategies' in scaling_actions:
 		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['verticalelasticitystrategies']], ymin = 0, ymax = max(xs),
-           colors = 'red', label = 'Vertical Scaling')
+           colors = 'dimgray', linestyles='dotted', label = 'Vertical Scaling')
 	if 'horizontalelasticitystrategies' in scaling_actions:
 		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['horizontalelasticitystrategies']], ymin = 0, ymax = max(xs),
-           colors = 'blue', label = 'Horizontal Scaling')
+           colors = 'limegreen', linestyles='dashed', label = 'Horizontal Scaling')
 
 
 def plot_samples(axs, samples, label, title, y_label):
@@ -279,7 +275,7 @@ def plot_samples(axs, samples, label, title, y_label):
 	axs.set_title(title)
 	axs.set_xlabel('Seconds')
 	axs.set_ylabel(y_label)
-	axs.legend()
+	axs.legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0)
 
 
 def extract_values(samples):
