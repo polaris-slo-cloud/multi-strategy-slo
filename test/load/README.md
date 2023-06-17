@@ -51,3 +51,9 @@ Currently, the feature is available through enabling the feature gate `InPlacePo
 
 In the example above, if the CPU resource request is changed, the container is not restarted.
 However, when resizing the memory of the container, it is restarted.
+
+The following charts show that in-place resize has a significant impact on workload resource request as no jitters occur due to pending pods.
+Having no jitters will benefit scaling in a sense that pods can be scheduled even if there is not enough resources to start a new container to replace to old one.
+Thanks to this behavior other workloads are not blocked due to vertical scaling action is replacing pods.
+
+![random_dl_inplace.png](random_dl_inplace.png)
