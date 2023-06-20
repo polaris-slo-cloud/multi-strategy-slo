@@ -5,7 +5,7 @@ import {
   Sample, TimeRange,
 } from '@polaris-sloc/core';
 import { AverageCpuUtilization, AverageCpuUtilizationParams } from '@org/slos';
-import { Observable } from 'rxjs';
+import {Observable, throwError} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
 
 /**
@@ -63,6 +63,12 @@ export class AverageCpuUtilizationMetricSource extends ComposedMetricSourceBase<
       .multiplyBy(100);
 
     const result = await cpuUsage.execute();
-    return Math.ceil(result.results[0]?.samples[0].value);
+    const value = result.results[0]?.samples[0].value;
+
+    if (value == null || isNaN(value)) {
+      throw Error(`Invalid query result: ${value}`)
+    }
+
+    return Math.ceil(value);
   }
 }
