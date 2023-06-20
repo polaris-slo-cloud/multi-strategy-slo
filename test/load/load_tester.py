@@ -127,15 +127,11 @@ def get_cpu_resource_req(deployment_name, start, end):
 
 
 
-def get_mem_resource_req(deployment_name, start, end):
-	metric = f'sum(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="memory"}})'
+def get_container_resource_req(deployment_name, start, end):
+	metric = f'sum(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}}) / count(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}})'
 	query = query_prometheus(metric, start, end)
 	result = extract_query_result(query)
-	return [[correct_time(sublist[0], start), bytes_to_megabytes(float(sublist[1]))] for sublist in result]
-
-
-def bytes_to_megabytes(bytes):
-	return bytes / 1000 / 1000
+	return [[correct_time(sublist[0], start), float(sublist[1])] for sublist in result]
 
 
 class SloTest:
@@ -148,9 +144,12 @@ class SloTest:
 
 def job(value):
 	#todo remove server url
+	requestMilliCores = int(value / 10)
+	if requestMilliCores <= 0:
+		return
 	url = f'http://localhost:8080/ConsumeCPU'
 	params = {
-	'millicores': int(value / 10),
+	'millicores': requestMilliCores,
 	'durationSec': 1
 	}
 	headers = {
@@ -172,10 +171,10 @@ def generate_load(data, stop_event):
 	for value in data:
 		round_start = unix_timestamp()
 		print(f'Producing {value} millis load')
-		while unix_timestamp() < round_start + 60:
+		while unix_timestamp() <= round_start + 60:
 			for i in range(10):
 				job(value)
-				time.sleep(0.1)
+				time.sleep(0.05)
 				if stop_event.is_set():
 					return
 
@@ -229,8 +228,48 @@ def observe_load(data):
 	return scaling_actions
 
 
+def get_cpu_usage_instant():
+	metric = cpu_usage_metric
+	url = f'http://localhost:{prometheus_port}/api/v1/query'
+	time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+	params = {
+	'query': metric,
+	'time': time
+	}
+
+	response = requests.get(url, params=params)
+	if response.status_code == 200:
+		data = response.json()
+		return data['data']['result'][0]['value'][1]
+	else:
+		print(f"Request failed with status code: {response.status_code}")
+		exit(1)
+
+
+def wait_for_service_monitor():
+	cpu_usage = None
+	error_counter = 0
+	max_error = 50
+	while True:
+		try:
+			cpu_usage = int(get_cpu_usage_instant())
+			print(f'Service Monitor has been detected')
+			return
+		except IndexError:
+			print('Waiting for Service Monitor to be detected...')
+		except Exception as e:
+			print(e)
+			error_counter += 1
+		finally:
+			if error_counter >= max_error:
+				print('Max error count reached. Exiting.')
+				return
+			time.sleep(5)
+
+
 def execute_test(tested, data):
 	print('Starting to track metrics...')
+	wait_for_service_monitor()
 	start = unix_timestamp()
 
 	scaling_actions = observe_load(data)
@@ -244,21 +283,24 @@ def plot_test_result(tested, start, end, scaling_actions):
 	label = tested.name
 	fig, axs = plt.subplots(nrows=4, ncols=1, sharex=True)
 	cpu_usage = get_cpu_usage(start, end)
-	plot_scaling_actions(axs[0], scaling_actions, start)
+	#plot_scaling_actions(axs[1], scaling_actions, start)
 	plot_samples(axs[0], cpu_usage, 'Actual', 'CPU Usage', 'Percent')
 	plot_samples(axs[0], [[int(sublist[0]), float(target_cpu_usage)] for sublist in cpu_usage], 'Target', 'CPU Usage', 'Percent')
 
 	cpu_req = get_cpu_resource_req(deployment, start, end)
-	mem_req = get_mem_resource_req(deployment, start, end)
+	container_req = get_container_resource_req(deployment, start, end)
 	pod_count = get_replica_count(deployment, start, end)
-	
+
 	plot_samples(axs[1], cpu_req, None, 'Workload CPU Request', 'Core')
-	plot_samples(axs[2], mem_req, None, 'Workload Memory Request', "Mi")
+	plot_samples(axs[2], container_req, None, 'Container CPU Request', "Core")
 	plot_samples(axs[3], pod_count, None, 'Workload Size', 'Pod')
-	axs[0].legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, fontsize=8)
-	axs[3].set_xlabel('Seconds', fontsize=8, loc='right')
+	axs[0].legend(fontsize=5, ncols=2)
+	axs[3].set_xlabel('Time (sec)', fontsize=8, loc='center')
 	if tested.title is not None:
 		fig.suptitle(tested.title)
+
+	for ax in axs:
+		ax.grid(linewidth=0.2)
 	plt.tight_layout()
 	plt.gcf().set_size_inches(8, 6)
 	plt.savefig(f'./result/{tested.export_file}', dpi=200)
@@ -266,12 +308,12 @@ def plot_test_result(tested, start, end, scaling_actions):
 
 def plot_scaling_actions(plt, scaling_actions, start):
 	print(scaling_actions)
-	xs = [1, 100]
+	y_min, y_max = plt.get_ylim()
 	if 'verticalelasticitystrategies' in scaling_actions:
-		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['verticalelasticitystrategies']], ymin = 0, ymax = max(xs),
+		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['verticalelasticitystrategies']], ymin = y_min, ymax = y_max,
            colors = 'dimgray', linestyles='dotted', label = 'Vertical Scaling')
 	if 'horizontalelasticitystrategies' in scaling_actions:
-		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['horizontalelasticitystrategies']], ymin = 0, ymax = max(xs),
+		plt.vlines(x = [correct_time(value, start) for value in scaling_actions['horizontalelasticitystrategies']], ymin = y_min, ymax = y_max,
            colors = 'limegreen', linestyles='dashed', label = 'Horizontal Scaling')
 
 
@@ -282,6 +324,8 @@ def plot_samples(axs, samples, label, title, y_label):
 		axs.plot(time, value, label=label)
 	else:
 		axs.plot(time, value)
+	axs.tick_params(axis='x', labelsize=8)
+	axs.tick_params(axis='y', labelsize=8)
 	axs.set_title(title, fontsize=10)
 	axs.set_ylabel(y_label, fontsize=8)
 
@@ -320,8 +364,6 @@ def run_test(test, data):
 		proxy = setup_prometheus_connection()
 		print("Executing test...")
 		execute_test(test, data)
-	except Exception as e:
-		print(f"Error during execution: {e}")
 	finally:
 		print("Cleaning up...")
 		delete_from_paths(test.yamls)

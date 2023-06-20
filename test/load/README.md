@@ -9,7 +9,7 @@ The resulting charts should show that an elasticity strategies are used to estab
 Individual test results can be then compared by the reader.
 Even though reproducibility is an important factor for testing, this approach does not allow testcases to be fully reproduced due to various reasons like I/O errors.
 
-## Environment
+## Configuration and Environment
 
 The tests presented in this document are executed using minikube with the following configuration:
 
@@ -18,7 +18,30 @@ The tests presented in this document are executed using minikube with the follow
     minikube addons enable metrics-server
     minikube addons enable ingress
 
-## Priority Decision Logic
+All tests are carried out with the same `staticElasticityStrategyConfig`
+
+    ...
+    staticElasticityStrategyConfig:
+      maxResources:
+        milliCpu: 200
+        memoryMiB: 100
+      minResources:
+        milliCpu: 50
+        memoryMiB: 50
+      minReplicas: 1
+      maxReplicas: 5
+
+## Results
+
+### Random Decision Logic
+
+![random.png](result/random.png)
+
+### Round Robin Decision Logic
+
+![round.png](result/round.png)
+
+### Priority Decision Logic
 
 In this example the primary strategy is horizontal scaling, if the workload scale has reached limit the decision logic switches to the secondary strategy which is vertical scaling.
 It is clearly visible on the results that the SLO controller scales to workload up if the current utilization exceeds the target.
@@ -26,14 +49,9 @@ Any scaling action is skipped if the current CPU usage hovers near the target CP
 
 ![priority_dl.png](result/priority.png)
 
+### Threshold Decision Logic
 
-## Random Decision Logic
-
-![random_dl.png](result/random_dl.png)
-
-## Round Robin Decision Logic
-
-![round.png](result/round.png)
+![threshold.png](result/threshold.png)
 
 ## New Resize Policy
 
@@ -56,4 +74,18 @@ The following charts show that in-place resize has a significant impact on workl
 Having no jitters will benefit scaling in a sense that pods can be scheduled even if there is not enough resources to start a new container to replace to old one.
 Thanks to this behavior other workloads are not blocked due to vertical scaling action is replacing pods.
 
-![random_dl_inplace.png](result/random_dl_inplace.png)
+### Random Decision Logic
+
+![random_in-place.png](result/random_in-place.png)
+
+### Round Robin Decision Logic
+
+![round_in-place.png](result/round_in-place.png)
+
+### Priority Decision Logic
+
+![priority_in-place.png](result/priority_in-place.png)
+
+### Threshold Decision Logic
+
+![threshold_in-place.png](result/threshold_in-place.png)

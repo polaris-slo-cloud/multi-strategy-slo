@@ -174,15 +174,11 @@ def get_cpu_resource_req(deployment_name, start, end):
 
 
 
-def get_mem_resource_req(deployment_name, start, end):
-	metric = f'sum(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="memory"}})'
+def get_container_resource_req(deployment_name, start, end):
+	metric = f'sum(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}}) / count(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}})'
 	query = query_prometheus(metric, start, end)
 	result = extract_query_result(query)
-	return [[correct_time(sublist[0], start), bytes_to_megabytes(float(sublist[1]))] for sublist in result]
-
-
-def bytes_to_megabytes(bytes):
-	return bytes / 1000 / 1000
+	return [[correct_time(sublist[0], start), float(sublist[1])] for sublist in result]
 
 
 class SloTest:
@@ -210,14 +206,16 @@ def execute_test(tested, reference, first_value, last_value, result_name):
 
 	for count, deployment in enumerate(deployments):
 		cpu_req = get_cpu_resource_req(deployment, start, end)
-		mem_req = get_mem_resource_req(deployment, start, end)
+		container_req = get_container_resource_req(deployment, start, end)
 		pod_count = get_replica_count(deployment, start, end)
 		plot_samples(axs[1], cpu_req, label[count], 'Workload CPU Request', 'Core')
-		plot_samples(axs[2], mem_req, label[count], 'Workload Memory Request', "Mi")
+		plot_samples(axs[2], container_req, label[count], 'Container CPU Request', "Core")
 		plot_samples(axs[3], pod_count, label[count], 'Workload Size', 'Pod')
 
 	#fig.suptitle(tested.title)
-	axs[3].set_xlabel('Seconds', fontsize=8, loc='right')
+	for ax in axs:
+		ax.grid(linewidth=0.2)
+	axs[3].set_xlabel('Time (sec)', fontsize=8, loc='center')
 	plt.tight_layout()
 	plt.gcf().set_size_inches(8, 6)
 	plt.savefig(f'./result/{result_name}', dpi=200)
@@ -230,9 +228,11 @@ def plot_samples(axs, samples, label, title, y_label):
 		axs.plot(time, value, label=label)
 	else:
 		axs.plot(time, value)
-	axs.legend(bbox_to_anchor=(1.04, 0.5), loc="center left", borderaxespad=0, fontsize=8)
-	axs.set_title(title, fontsize=8)
-	axs.set_ylabel(y_label)
+	axs.legend(fontsize=5, ncols=2)
+	axs.set_title(title, fontsize=10)
+	axs.set_ylabel(y_label, fontsize=8)
+	axs.tick_params(axis='x', labelsize=8)
+	axs.tick_params(axis='y', labelsize=8)
 
 
 def extract_values(samples):

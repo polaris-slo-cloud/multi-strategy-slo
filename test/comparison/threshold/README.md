@@ -38,7 +38,7 @@ Even though the threshold strategy introduced some lag in the scaling in the tes
 In this scenario the threshold based strategy shows its strengths including fine-grained scaling and the flexibility by allowing multiple strategies to be combined.
 The constant CPU usage simulates a workload utilization that linearly increases over time.
 This scenario benefits fine-grained scaling, as the threshold based strategy chooses vertical scaling to adjust workload resources in order to comply with the SLO. Vertical scaling is more efficient than horizontal scaling in terms of resource allocation, because horizontal scaling can only multiple its workload resource requests.
-Therefore the threshold based scaling can easily outperform the simple horizontal strategy saving not utilized resources thus costs for the service provider.
+Therefore, the threshold based scaling can easily outperform the simple horizontal strategy saving not utilized resources thus costs for the service provider.
 At the later stages of the test, the limit for vertical scaling is reached, therefore the threshold strategy decides to switch over to horizontal scaling. This makes the threshold scaling strategy to be more robust.
 
 ![plot](threshold_horizontal_constant.png)

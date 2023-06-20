@@ -10,6 +10,8 @@ def test_runner(slo_test_test, slo_test_ref, result_name):
 		test.run_test(slo_test_test, slo_test_ref, data, result_name)
 	except Exception as e:
 		print(f'Exception on test: {e}')
+	except KeyboardInterrupt:
+		exit(1)
 
 def get_tested_yamls(category):
 	return [f'{category}/manifests/workload_test.yaml', f'{category}/manifests/slo-mapping_test.yaml']

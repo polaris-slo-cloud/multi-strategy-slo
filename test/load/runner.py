@@ -2,11 +2,13 @@ import os
 import sys
 import load_tester as test
 
-data = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1000, 1000, 900, 800, 700, 600, 500, 400, 300, 200, 100, 0]
+data = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1000, 1000, 900, 800, 700, 600, 500, 400, 300, 200, 100, 0, 0, 0, 0]
 
 def test_runner(slo_test):
 	try:
 		test.run_test(slo_test, data)
+	except KeyboardInterrupt:
+		exit(1)
 	except Exception as e:
 		print(f'Exception on test: {e}')
 
