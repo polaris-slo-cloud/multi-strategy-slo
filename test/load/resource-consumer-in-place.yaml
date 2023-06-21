@@ -15,12 +15,8 @@ spec:
     spec:
       containers:
       - name: resource-consumer
-        resizePolicy:
-          - resourceName: cpu
-            restartPolicy: NotRequired
-          - resourceName: memory
-            restartPolicy: NotRequired
         image: gcr.io/k8s-staging-e2e-test-images/resource-consumer:1.9
+        #resize policy defaults to NotRequired: https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/
         ports:
         - containerPort: 8080
         resources:

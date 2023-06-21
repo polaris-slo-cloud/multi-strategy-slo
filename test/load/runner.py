@@ -17,20 +17,20 @@ def test_runner(slo_test):
 # Random Decision Logic Tests
 
 test_runner(test.SloTest('Random Decision', 'resource-consumer', ['resource-consumer.yaml', 'random.yaml'], 'random'))
-test_runner(test.SloTest('Random Decision', 'resource-consumer', ['resource-consumer-in-place.yaml', 'random.yaml'], 'random_in-place'))
+test_runner(test.SloTest('Random Decision', 'resource-consumer-in-place', ['resource-consumer-in-place.yaml', 'random.yaml'], 'random_in-place'))
 
 
 # Round Robin Decision Logic Tests
 
 test_runner(test.SloTest('Round Robin Decision', 'resource-consumer', ['resource-consumer.yaml', 'round.yaml'], 'round'))
-test_runner(test.SloTest('Round Robin Decision', 'resource-consumer', ['resource-consumer-in-place.yaml', 'round.yaml'], 'round_in-place'))
+test_runner(test.SloTest('Round Robin Decision', 'resource-consumer-in-place', ['resource-consumer-in-place.yaml', 'round.yaml'], 'round_in-place'))
 
 # Priority Decision Logic Tests
 
 test_runner(test.SloTest('Priority Decision', 'resource-consumer', ['resource-consumer.yaml', 'priority.yaml'], 'priority'))
-test_runner(test.SloTest('Priority Decision', 'resource-consumer', ['resource-consumer-in-place.yaml', 'priority.yaml'], 'priority_in-place'))
+test_runner(test.SloTest('Priority Decision', 'resource-consumer-in-place', ['resource-consumer-in-place.yaml', 'priority.yaml'], 'priority_in-place'))
 
 # Threshold Decision Logic Tests
 
 test_runner(test.SloTest('Threshold Decision', 'resource-consumer', ['resource-consumer.yaml', 'threshold.yaml'], 'threshold'))
-test_runner(test.SloTest('Threshold Decision', 'resource-consumer', ['resource-consumer-in-place.yaml', 'threshold.yaml'], 'threshold_in-place'))
+test_runner(test.SloTest('Threshold Decision', 'resource-consumer-in-place', ['resource-consumer-in-place.yaml', 'threshold.yaml'], 'threshold_in-place'))

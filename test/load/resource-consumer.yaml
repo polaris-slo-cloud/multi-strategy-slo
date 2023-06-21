@@ -16,6 +16,11 @@ spec:
       containers:
       - name: resource-consumer
         image: gcr.io/k8s-staging-e2e-test-images/resource-consumer:1.9
+        resizePolicy:
+          - resourceName: cpu
+            restartPolicy: RestartContainer
+          - resourceName: memory
+            restartPolicy: RestartContainer
         ports:
         - containerPort: 8080
         resources:
