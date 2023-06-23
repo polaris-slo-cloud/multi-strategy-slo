@@ -43,3 +43,5 @@ Thumbs.db
 /test/.idea/test.iml
 /test/.idea/vcs.xml
 /test/.idea/workspace.xml
+/deployment.yaml
+/tunnel.sh

@@ -13,21 +13,31 @@ import sys
 namespace = 'polaris'
 slo_controller_interval_ms = 5000
 metric_controller_interval_ms = 3000
-
 prometheus_port = 9090
+cluster_ip = '192.168.49.2'
 
 lib_crds = [
     	'crds'
 	]
 apps = [
     	'average-cpu-utilization',
-    	'average-cpu-utilization-metric-controller',
+    	'demo-average-cpu-utilization-metric-controller',
+    	'demo-cpu-load-metric-controller',
     	'multi-elasticity-strategy'
 	]
 
 
 cpu_usage_metric = 'polaris_composed_metrics_polaris_slo_cloud_github_io_v1_average_cpu_utilization'
+cpu_load_metric = 'polaris_composed_metrics_polaris_slo_cloud_github_io_v1_cpu_load'
 target_cpu_usage = 50
+
+def set_test_data(data):
+	json_list = json.dumps(data)
+	set_deployment_env_var('demo-cpu-load-metric-controller', 'CPU_TEST_DATA', json_list)
+
+
+def set_deployment_env_var(deployment_name, name, value):
+	subprocess.call(['kubectl', 'set', 'env', f'deployment/{deployment_name}', f'{name}={value}', '-n', f'{namespace}'])
 
 
 def create_from_paths(paths):
@@ -142,42 +152,6 @@ class SloTest:
 		self.export_file = export_file
 		self.title = title
 
-def job(value):
-	#todo remove server url
-	requestMilliCores = int(value / 10)
-	if requestMilliCores <= 0:
-		return
-	url = f'http://localhost:8080/ConsumeCPU'
-	params = {
-	'millicores': requestMilliCores,
-	'durationSec': 1
-	}
-	headers = {
-	'Content-Type': 'application/x-www-form-urlencoded',
-	'Connection':'close'
-	}
-	try:
-		response = requests.post(url, data=params, headers=headers)
-		#print(response.url, unix_timestamp())
-		#print(response.text)
-		if response.status_code != 200:
-			print(response)
-	except Exception as e:
-		print(f"Error during execution: {e}")
-
-
-def generate_load(data, stop_event):
-	threads = []
-	for value in data:
-		round_start = unix_timestamp()
-		print(f'Producing {value} millis load')
-		while unix_timestamp() <= round_start + 60:
-			for i in range(10):
-				job(value)
-				time.sleep(0.05)
-				if stop_event.is_set():
-					return
-
 
 def watch_kubernetes(counter_callback, stop_event, plural):
 	print('watch_kubernetes_object_updates')
@@ -216,11 +190,9 @@ def observe_load(data):
 
 		v_watcher = threading.Thread(target=watch_kubernetes, args=(update_counter, stop_event_watch, 'verticalelasticitystrategies'), daemon=True)
 		h_watcher = threading.Thread(target=watch_kubernetes, args=(update_counter, stop_event_watch, 'horizontalelasticitystrategies'), daemon=True)
-		load_thread = threading.Thread(target=generate_load, args=(data, stop_event_load), daemon=True)
-		load_thread.start()
 		v_watcher.start()
 		h_watcher.start()
-		load_thread.join()
+		wait_for_value(data[-1])
 	finally:
 		stop_event_watch.set()
 		stop_event_load.set()
@@ -228,8 +200,8 @@ def observe_load(data):
 	return scaling_actions
 
 
-def get_cpu_usage_instant():
-	metric = cpu_usage_metric
+def get_cpu_load_instant():
+	metric = cpu_load_metric
 	url = f'http://localhost:{prometheus_port}/api/v1/query'
 	time = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
 	params = {
@@ -246,18 +218,22 @@ def get_cpu_usage_instant():
 		exit(1)
 
 
-def wait_for_service_monitor():
+def wait_for_value(value):
 	cpu_usage = None
 	error_counter = 0
 	max_error = 50
-	while True:
+	while cpu_usage != value:
 		try:
-			cpu_usage = int(get_cpu_usage_instant())
-			print(f'Service Monitor has been detected')
-			return
+			cpu_usage = int(float(get_cpu_load_instant()) * 1000)
+			print(f'Current CPU usage: {cpu_usage}')
+			if cpu_usage == value:
+				print('Desired CPU usage reached.')
+				return
+			error_counter = 0
 		except IndexError:
-			print('Waiting for Service Monitor to be detected...')
+			print('Waiting for metric to be available...')
 		except Exception as e:
+			print(f'Error count: {error_counter}')
 			print(e)
 			error_counter += 1
 		finally:
@@ -269,7 +245,7 @@ def wait_for_service_monitor():
 
 def execute_test(tested, data):
 	print('Starting to track metrics...')
-	wait_for_service_monitor()
+	wait_for_value(data[0])
 	start = unix_timestamp()
 
 	scaling_actions = observe_load(data)
@@ -337,8 +313,9 @@ def extract_values(samples):
 def cleanup_prometheus():
 	metrics = [
 	cpu_usage_metric,
+	cpu_load_metric,
 	'kube_deployment_spec_replicas',
-	'kube_pod_container_resource_limits'
+	'kube_pod_container_resource_limits',
 	]
 
 	for metric in metrics:
@@ -359,6 +336,7 @@ def run_test(test, data):
 	try:
 		setup_polaris()
 		create_from_paths(test.yamls)
+		set_test_data(data)
 		wait_all_ready()
 		print("Setting up Prometheus connection...")
 		proxy = setup_prometheus_connection()

@@ -26,26 +26,27 @@ export class VerticalElasticityStrategyController extends VerticalElasticityStra
     elasticityStrategy: ElasticityStrategy<SloCompliance, SloTarget, VerticalElasticityStrategyConfig>,
     container: Container,
   ): Promise<ContainerResources> {
+    const sloCompliance = elasticityStrategy.spec.sloOutputParams.currSloCompliancePercentage;
     let ret: ContainerResources;
-    if (elasticityStrategy.spec.sloOutputParams.currSloCompliancePercentage > 100) {
-      ret = this.scaleUp(elasticityStrategy.spec.staticConfig, container.resources);
+    if (sloCompliance > 100) {
+      ret = this.scaleUp(sloCompliance, container.resources);
     } else {
-      ret = this.scaleDown(elasticityStrategy.spec.staticConfig, container.resources);
+      ret = this.scaleDown(sloCompliance, container.resources);
     }
     return Promise.resolve(ret);
   }
 
-  private scaleUp(config: VerticalElasticityStrategyConfig, resources: ContainerResources): ContainerResources {
-    const scaleUpPercent = this.getScaleUpPercentOrDefault(config) / 100;
+  private scaleUp(sloCompliance: number, resources: ContainerResources): ContainerResources {
+    const scaleUpPercent = sloCompliance / 100;
     return resources.scale(
-      (name, value) => value + value * scaleUpPercent,
+      (name, value) => value * scaleUpPercent,
     );
   }
 
-  private scaleDown(config: VerticalElasticityStrategyConfig, resources: ContainerResources): ContainerResources {
-    const scaleDownPercent = this.getScaleDownPercentOrDefault(config) / 100;
+  private scaleDown(sloCompliance: number, resources: ContainerResources): ContainerResources {
+    const scaleDownPercent = sloCompliance / 100;
     return resources.scale(
-      (name, value) => value - value * scaleDownPercent,
+      (name, value) => value * scaleDownPercent,
     );
   }
 }

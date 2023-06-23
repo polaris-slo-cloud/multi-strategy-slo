@@ -1,11 +1,4 @@
-import {
-  Constructor,
-  DefaultTransformer,
-  JsonSchema,
-  Logger,
-  PolarisTransformationService,
-  ReusablePolarisTransformer
-} from "@polaris-sloc/core";
+import {Constructor, JsonSchema, PolarisTransformationService, ReusablePolarisTransformer} from "@polaris-sloc/core";
 import {ElasticityDecisionLogic} from "@org/slos";
 import {ObjectKindTransformer} from "@polaris-sloc/kubernetes";
 

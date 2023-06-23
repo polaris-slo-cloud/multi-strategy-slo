@@ -1,5 +1,5 @@
 # Builder stage
-FROM node:18-alpine AS builder
+FROM node:18-alpine3.17 AS builder
 WORKDIR /usr/src/polaris
 
 ARG POLARIS_APP_TYPE
@@ -24,7 +24,7 @@ RUN npx nx build ${POLARIS_APP_NAME}
 
 
 # Final image stage
-FROM node:18-alpine
+FROM node:18-alpine3.17
 
 ARG POLARIS_APP_TYPE
 ARG POLARIS_APP_NAME

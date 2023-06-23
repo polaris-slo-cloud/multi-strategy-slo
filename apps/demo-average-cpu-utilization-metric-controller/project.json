@@ -1,0 +1,87 @@
+{
+  "name": "demo-average-cpu-utilization-metric-controller",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/demo-average-cpu-utilization-metric-controller/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/demo-average-cpu-utilization-metric-controller",
+        "main": "apps/demo-average-cpu-utilization-metric-controller/src/main.ts",
+        "tsConfig": "apps/demo-average-cpu-utilization-metric-controller/tsconfig.app.json",
+        "assets": [
+          "apps/demo-average-cpu-utilization-metric-controller/src/assets"
+        ],
+        "isolatedConfig": true,
+        "webpackConfig": "apps/demo-average-cpu-utilization-metric-controller/webpack.config.js",
+        "externalDependencies": "none"
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "demo-average-cpu-utilization-metric-controller:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "demo-average-cpu-utilization-metric-controller:build:development"
+        },
+        "production": {
+          "buildTarget": "demo-average-cpu-utilization-metric-controller:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/demo-average-cpu-utilization-metric-controller/**/*.ts"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/demo-average-cpu-utilization-metric-controller/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true
+        }
+      }
+    },
+    "docker-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "docker build -f ./apps/demo-average-cpu-utilization-metric-controller/Dockerfile --build-arg POLARIS_APP_TYPE=slo --build-arg POLARIS_APP_NAME=demo-average-cpu-utilization-metric-controller -t stvnkiss/demo-average-cpu-utilization-metric-controller:latest ."
+        ],
+        "parallel": false
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "kubectl apply -f ./apps/demo-average-cpu-utilization-metric-controller/manifests/kubernetes"
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": []
+}

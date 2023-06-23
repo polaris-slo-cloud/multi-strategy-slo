@@ -1,0 +1,27 @@
+kind: CpuUtilizationSloMapping
+apiVersion: slo.polaris-slo-cloud.github.io/v1
+metadata:
+  namespace: polaris
+  name: test-cpu-utilization
+spec:
+  targetRef:
+    kind: Deployment
+    name: resource-consumer
+    apiVersion: apps/v1
+  elasticityStrategy:
+    kind: VerticalElasticityStrategy
+    apiVersion: elasticity.polaris-slo-cloud.github.io/v1
+  sloConfig:
+    targetUtilizationPercentage: 50
+  stabilizationWindow:
+    scaleDownSeconds: 0
+    scaleUpSeconds: 0
+  staticElasticityStrategyConfig:
+    maxResources:
+      milliCpu: 2000
+      memoryMiB: 100
+    minResources:
+      milliCpu: 500
+      memoryMiB: 50
+    minReplicas: 1
+    maxReplicas: 5

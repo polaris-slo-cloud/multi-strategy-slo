@@ -1,7 +1,9 @@
 import {
   AverageCpuUtilization,
   AverageCpuUtilizationMetric,
-  AverageCpuUtilizationParams,
+  AverageCpuUtilizationParams, CpuLoad,
+  CpuLoadMetric,
+  CpuLoadParams,
   CpuUtilizationSloConfig,
   CpuUtilizationSloMappingSpec,
   ElasticityDecisionLogic
@@ -9,13 +11,16 @@ import {
 import {
   ComposedMetricSource,
   createOwnerReference,
-  ElasticityStrategyKind, Logger,
+  ElasticityStrategyKind,
+  Logger,
   MetricsSource,
   ObservableOrPromise,
   OrchestratorGateway,
   ServiceLevelObjective,
   SloCompliance,
-  SloMapping, SloMappingBase, SloMappingSpec,
+  SloMapping,
+  SloMappingBase,
+  SloMappingSpec,
   SloOutput,
   SloTarget,
 } from '@polaris-sloc/core';
@@ -33,6 +38,7 @@ export class CpuUtilizationSlo
 
   private metricsSource: MetricsSource;
   private averageCpuUtilizationMetricSource: ComposedMetricSource<AverageCpuUtilization>;
+  private cpuLoadMetricSource: ComposedMetricSource<CpuLoad>;
   private decisionLogic: ElasticityDecisionLogic<CpuUtilizationSloConfig, SloCompliance, SloTarget, ElasticityStrategyKind<any>>;
 
   configure(
@@ -52,7 +58,14 @@ export class CpuUtilizationSlo
       owner: createOwnerReference(sloMapping)
     };
 
+    const cpuLoadParams: CpuLoadParams = {
+      sloTarget: sloMapping.spec.targetRef,
+      namespace: sloMapping.metadata.namespace,
+      owner: createOwnerReference(sloMapping)
+    }
+
     this.averageCpuUtilizationMetricSource = metricsSource.getComposedMetricSource(AverageCpuUtilizationMetric.instance, cpuUtilizationParams);
+    this.cpuLoadMetricSource = metricsSource.getComposedMetricSource(CpuLoadMetric.instance, cpuLoadParams);
     return this.configureDecisionLogic(orchestrator, sloMapping, metricsSource);
   }
 
@@ -68,7 +81,9 @@ export class CpuUtilizationSlo
   }
 
   async evaluate(): Promise<SloOutput<SloCompliance>> {
-    const sample = await this.averageCpuUtilizationMetricSource.getCurrentValue().toPromise();
+
+    const sample = await this.cpuLoadMetricSource.getCurrentValue().toPromise()
+      .then(() => this.averageCpuUtilizationMetricSource.getCurrentValue().toPromise())
     const currSloCompliancePercentage = this.calculateCompliance(sample.value);
     const compliance = { currSloCompliancePercentage };
 

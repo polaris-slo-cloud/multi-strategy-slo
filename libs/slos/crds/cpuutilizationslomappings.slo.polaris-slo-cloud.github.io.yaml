@@ -2,7 +2,7 @@ kind: CustomResourceDefinition
 apiVersion: apiextensions.k8s.io/v1
 metadata:
   annotations:
-    polaris-slo-cloud.github.io/schema-gen-version: 0.6.0-beta.3
+    polaris-slo-cloud.github.io/schema-gen-version: 0.6.0
   name: cpuutilizationslomappings.slo.polaris-slo-cloud.github.io
 spec:
   group: slo.polaris-slo-cloud.github.io
@@ -33,9 +33,7 @@ spec:
             spec:
               type: object
               required:
-                - elasticityDecisionLogic
                 - elasticityStrategy
-                - secondaryElasticityStrategy
                 - sloConfig
                 - targetRef
               description: The spec type for the CpuUtilization SLO.

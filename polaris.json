@@ -10,7 +10,8 @@
         "outDir": "libs/slos/crds",
         "polarisTypes": [
           "CpuUtilizationSloMapping",
-          "AverageCpuUtilizationMetricMapping"
+          "AverageCpuUtilizationMetricMapping",
+          "CpuLoadMetricMapping"
         ]
       }
     },
@@ -29,6 +30,14 @@
     "demo-metric-controller": {
       "projectType": "composed-metric-controller",
       "tsEntryPoint": "apps/demo-metric-controller/src/main.ts"
+    },
+    "demo-average-cpu-utilization-metric-controller": {
+      "projectType": "composed-metric-controller",
+      "tsEntryPoint": "apps/demo-average-cpu-utilization-metric-controller/src/main.ts"
+    },
+    "demo-cpu-load-metric-controller": {
+      "projectType": "composed-metric-controller",
+      "tsEntryPoint": "apps/demo-cpu-load-metric-controller/src/main.ts"
     }
   }
 }

@@ -1,8 +1,13 @@
-import { PolarisRuntime } from '@polaris-sloc/core';
+import {PolarisRuntime} from '@polaris-sloc/core';
 import {
-  CpuUtilizationSloMapping, ElasticityDecisionLogic, PriorityDecisionLogic,
+  BestFitElasticityDecisionLogic,
+  CpuUtilizationSloMapping,
+  ElasticityDecisionLogic,
+  PriorityDecisionLogic,
   RandomDecisionLogic,
-  RoundRobinDecisionLogic, ThresholdBasedDecisionLogic, TimeAwareDecisionLogic
+  RoundRobinDecisionLogic,
+  ThresholdBasedDecisionLogic,
+  TimeAwareDecisionLogic
 } from './slo-mappings/cpu-utilization.slo-mapping.prm';
 import {AverageCpuUtilizationMetricMapping} from './metrics/average-cpu-utilization-metric.prm';
 import {ElasticityDecisionLogicTransformer} from "./transformer/elasticity-decision-logic.transformer";
@@ -12,6 +17,7 @@ import {
   VerticalElasticityStrategy,
   VerticalElasticityStrategyKind
 } from "@polaris-sloc/common-mappings";
+import {CpuLoadMetricMapping} from "./metrics/cpu-load-metric.prm";
 
 /**
  * Initializes this library and registers its types with the transformer in the `PolarisRuntime`.
@@ -25,6 +31,10 @@ function registerObjectKinds(polarisRuntime: PolarisRuntime) {
   polarisRuntime.transformer.registerObjectKind(
     new AverageCpuUtilizationMetricMapping().objectKind,
     AverageCpuUtilizationMetricMapping
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new CpuLoadMetricMapping().objectKind,
+    CpuLoadMetricMapping
   );
   polarisRuntime.transformer.registerObjectKind(
     new CpuUtilizationSloMapping().objectKind,
@@ -49,6 +59,10 @@ function registerObjectKinds(polarisRuntime: PolarisRuntime) {
   polarisRuntime.transformer.registerObjectKind(
     new ThresholdBasedDecisionLogic(),
     ThresholdBasedDecisionLogic
+  );
+  polarisRuntime.transformer.registerObjectKind(
+    new BestFitElasticityDecisionLogic(),
+    BestFitElasticityDecisionLogic
   );
   polarisRuntime.transformer.registerObjectKind(
     new VerticalElasticityStrategyKind(),
