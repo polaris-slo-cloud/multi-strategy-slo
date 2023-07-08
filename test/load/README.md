@@ -35,11 +35,11 @@ All tests are carried out with the same `staticElasticityStrategyConfig`
 
 ### Random Decision Logic
 
-![random.png](result/random.png)
+![random.png](result/linear/random.png)
 
 ### Round Robin Decision Logic
 
-![round.png](result/round.png)
+![round.png](result/linear/round.png)
 
 ### Priority Decision Logic
 
@@ -47,45 +47,12 @@ In this example the primary strategy is horizontal scaling, if the workload scal
 It is clearly visible on the results that the SLO controller scales to workload up if the current utilization exceeds the target.
 Any scaling action is skipped if the current CPU usage hovers near the target CPU usage.
 
-![priority_dl.png](result/priority.png)
+![priority_dl.png](result/linear/priority.png)
 
 ### Threshold Decision Logic
 
-![threshold.png](result/threshold.png)
+![threshold.png](result/linear/threshold.png)
 
-## New Resize Policy
+### Best-Fit Decision Logic
 
-In version 1.27, Kubernetes has introduced its [new alpha feature](https://kubernetes.io/blog/2023/05/12/in-place-pod-resize-alpha/) called in-place pod resize. The new feature enables container resizing without needing any restarts in the pod.
-This comes very handy in situations where an application might require more resources at certain stages of its life e.g. Java applications typically have higher CPU usage upon initialization.
-Not only restarts are avoided, but pending containers due to scaling do not occur, therefore the resource requests of a deployment are not influenced by _pending_ scaling action.
-
-Currently, the feature is available through enabling the feature gate `InPlacePodVerticalScaling` and by configuring the `resizePolicy` of the target workload:
-
-    resizePolicy:
-      - resourceName: cpu
-      restartPolicy: NotRequired
-      - resourceName: memory
-      restartPolicy: RestartContainer
-
-In the example above, if the CPU resource request is changed, the container is not restarted.
-However, when resizing the memory of the container, it is restarted.
-
-The following charts show that in-place resize has a significant impact on workload resource request as no jitters occur due to pending pods.
-Having no jitters will benefit scaling in a sense that pods can be scheduled even if there is not enough resources to start a new container to replace to old one.
-Thanks to this behavior other workloads are not blocked due to vertical scaling action is replacing pods.
-
-### Random Decision Logic
-
-![random_in-place.png](result/random_in-place.png)
-
-### Round Robin Decision Logic
-
-![round_in-place.png](result/round_in-place.png)
-
-### Priority Decision Logic
-
-![priority_in-place.png](result/priority_in-place.png)
-
-### Threshold Decision Logic
-
-![threshold_in-place.png](result/threshold_in-place.png)
+![best-fit.png](result/linear/best-fit.png)
