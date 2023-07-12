@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@polaris-sloc/common-mappings": "~0.6.0",
-    "@polaris-sloc/core": "~0.6.0",
+    "@polaris-sloc/core": "~0.6.2",
     "@polaris-sloc/kubernetes": "~0.6.0",
     "@polaris-sloc/prometheus": "~0.6.0",
     "rxjs": "^6.6.7",
