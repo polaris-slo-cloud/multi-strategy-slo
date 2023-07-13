@@ -16,8 +16,8 @@
     "@nx/node": "16.0.3",
     "@nx/webpack": "16.0.3",
     "@nx/workspace": "16.0.3",
-    "@polaris-sloc/cli": "~0.6.0",
-    "@polaris-sloc/polaris-nx": "~0.6.0",
+    "@polaris-sloc/cli": "~0.6.2",
+    "@polaris-sloc/polaris-nx": "~0.6.2",
     "@types/jest": "29.4.4",
     "@types/node": "18.7.1",
     "@typescript-eslint/eslint-plugin": "5.59.1",
@@ -35,10 +35,10 @@
     "typescript": "4.9.5"
   },
   "dependencies": {
-    "@polaris-sloc/common-mappings": "~0.6.0",
+    "@polaris-sloc/common-mappings": "~0.6.2",
     "@polaris-sloc/core": "~0.6.2",
-    "@polaris-sloc/kubernetes": "~0.6.0",
-    "@polaris-sloc/prometheus": "~0.6.0",
+    "@polaris-sloc/kubernetes": "~0.6.2",
+    "@polaris-sloc/prometheus": "~0.6.2",
     "rxjs": "^6.6.7",
     "tslib": "^2.3.0"
   }
