@@ -86,7 +86,8 @@ export class CpuUtilizationSlo
       .then(() => this.averageCpuUtilizationMetricSource.getCurrentValue().toPromise())
     const currSloCompliancePercentage = this.calculateCompliance(sample.value);
     const compliance: SloCompliance = {
-      currSloCompliancePercentage
+      currSloCompliancePercentage,
+      tolerance: 0
     };
 
     const elasticityStrategy = await this.selectStrategy(compliance);
