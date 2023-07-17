@@ -298,13 +298,27 @@ export class BestFitElasticityDecisionLogic extends ElasticityDecisionLogic<
 
   private async calculateVerticalFutureCompliance(sloCompliance: SloCompliance): Promise<number> {
     const currentCpuMillis = await this.getCurrentContainerSize();
-    const newCpuMillis = currentCpuMillis * (sloCompliance.currSloCompliancePercentage / 100);
+    const newCpuMillis = await this.getNewCpuMillis(currentCpuMillis, sloCompliance);
     const normalizedCpuMillis = this.normalizeCpuMillis(newCpuMillis);
     const currReplicas = await this.getCurrReplicas();
 
     const futureCompliance = await this.calculateFutureCompliance(currReplicas, normalizedCpuMillis);
     Logger.log(`Future compliance with VerticalElasticityStrategy is: ${futureCompliance}`)
     return futureCompliance;
+  }
+
+  private async getNewCpuMillis(currentCpuMillis: number, sloCompliance: SloCompliance) {
+    const compliancePercentage = sloCompliance.currSloCompliancePercentage;
+    const replicas = await this.getCurrReplicas();
+    const diff = Math.abs(compliancePercentage - 100);
+
+    let scaleRatio;
+    if (compliancePercentage > 100) {
+      scaleRatio = 100 + diff / replicas
+    } else {
+      scaleRatio = 100 - diff / replicas;
+    }
+    return currentCpuMillis * (scaleRatio / 100);
   }
 
   private normalizeCpuMillis(currCpuMillis: number): number {
