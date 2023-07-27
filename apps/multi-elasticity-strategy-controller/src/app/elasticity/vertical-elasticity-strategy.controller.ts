@@ -41,8 +41,7 @@ export class VerticalElasticityStrategyController extends VerticalElasticityStra
     resources: ContainerResources
   ): Promise<ContainerResources> {
     const diff = this.readCompliance(elasticityStrategy) - 100;
-    const replicas = await this.getScale(elasticityStrategy);
-    const scaleUpPercent = (100 + diff / replicas) / 100;
+    const scaleUpPercent = (100 + diff) / 100;
     return resources.scale(
       (name, value) => value * scaleUpPercent,
     );
@@ -53,8 +52,7 @@ export class VerticalElasticityStrategyController extends VerticalElasticityStra
     resources: ContainerResources
   ): Promise<ContainerResources> {
     const diff = Math.abs(this.readCompliance(elasticityStrategy) - 100);
-    const replicas = await this.getScale(elasticityStrategy);
-    const scaleDownPercent = (100 - diff / replicas) / 100;
+    const scaleDownPercent = (100 - diff) / 100;
     return resources.scale(
       (name, value) => value * scaleDownPercent,
     );

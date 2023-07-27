@@ -262,7 +262,7 @@ export class BestFitElasticityDecisionLogic extends ElasticityDecisionLogic<
     const newReplicas = Math.ceil(currReplicas * multiplier);
     const normalizedReplicas = this.normalizeReplicaCount(newReplicas);
     const containerCpuMillis = await this.getCurrentContainerSize();
-    const futureCompliance = await this.calculateFutureCompliance(normalizedReplicas, containerCpuMillis);
+    const futureCompliance = await this.calculateFutureCompliance(normalizedReplicas, containerCpuMillis, this.sloMappingSpec.sloConfig.targetUtilizationPercentage);
     Logger.log(`Future compliance with HorizontalElasticityStrategy is: ${futureCompliance}`);
     return futureCompliance;
   }
@@ -272,11 +272,12 @@ export class BestFitElasticityDecisionLogic extends ElasticityDecisionLogic<
       .then(scale => scale.spec.replicas);
   }
 
-  private async calculateFutureCompliance(scale: number, containerCpuMillis: number) {
+  private async calculateFutureCompliance(scale: number, containerCpuMillis: number, target: number) {
     const cpuLoad = await this.getCpuLoad();
     Logger.log(`cpuLoad ${cpuLoad}, containerCpuMillis: ${containerCpuMillis}, scale: ${scale}`)
     const rawCpuUsage = cpuLoad / (scale * containerCpuMillis) * 100;
-    return Math.ceil(Math.min(100, Math.max(0, rawCpuUsage)));
+    const cpuUsage = Math.ceil(Math.min(100, Math.max(0, rawCpuUsage)));
+    return Math.ceil((cpuUsage / target) * 100);
   }
 
   private normalizeReplicaCount(newReplicaCount: number): number {
@@ -302,21 +303,20 @@ export class BestFitElasticityDecisionLogic extends ElasticityDecisionLogic<
     const normalizedCpuMillis = this.normalizeCpuMillis(newCpuMillis);
     const currReplicas = await this.getCurrReplicas();
 
-    const futureCompliance = await this.calculateFutureCompliance(currReplicas, normalizedCpuMillis);
+    const futureCompliance = await this.calculateFutureCompliance(currReplicas, normalizedCpuMillis, this.sloMappingSpec.sloConfig.targetUtilizationPercentage);
     Logger.log(`Future compliance with VerticalElasticityStrategy is: ${futureCompliance}`)
     return futureCompliance;
   }
 
   private async getNewCpuMillis(currentCpuMillis: number, sloCompliance: SloCompliance) {
     const compliancePercentage = sloCompliance.currSloCompliancePercentage;
-    const replicas = await this.getCurrReplicas();
     const diff = Math.abs(compliancePercentage - 100);
 
     let scaleRatio;
     if (compliancePercentage > 100) {
-      scaleRatio = 100 + diff / replicas
+      scaleRatio = 100 + diff
     } else {
-      scaleRatio = 100 - diff / replicas;
+      scaleRatio = 100 - diff
     }
     return currentCpuMillis * (scaleRatio / 100);
   }
