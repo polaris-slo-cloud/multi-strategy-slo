@@ -24,10 +24,10 @@ spec:
     scaleUpSeconds: 0
   staticElasticityStrategyConfig:
     maxResources:
-      milliCpu: 500
+      milliCpu: 1000
       memoryMiB: 100
     minResources:
       milliCpu: 200
       memoryMiB: 50
-    minReplicas: 2
+    minReplicas: 1
     maxReplicas: 10
