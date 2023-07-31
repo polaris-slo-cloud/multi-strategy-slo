@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: polaris
+  name: resource-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: resource-consumer
+  template:
+    metadata:
+      labels:
+        component: resource-consumer
+    spec:
+      containers:
+      - name: resource-consumer
+        image: gcr.io/k8s-staging-e2e-test-images/resource-consumer:1.9
+        ports:
+          - name: rest
+            containerPort: 8080
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 50Mi
+          limits:
+            cpu: 1000m
+            memory: 50Mi
