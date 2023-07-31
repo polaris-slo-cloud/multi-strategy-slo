@@ -353,10 +353,26 @@ export class PriorityDecisionLogic extends ElasticityDecisionLogic<
   private sloMapping: SloMapping<CpuUtilizationSloConfig, SloCompliance>;
   private scaleClient: ScaleClient;
 
-  selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
+  async selectElasticityStrategy(sloOutput: SloCompliance): Promise<VerticalElasticityStrategyKind | HorizontalElasticityStrategyKind> {
     const scaleDirection = sloOutput.currSloCompliancePercentage >= 100 ? 'UP' : 'DOWN';
-    return this.scaleClient.isPrimaryStrategyAvailable(scaleDirection)
-      .then(isPrimary => isPrimary ? this.sloMappingSpec.elasticityStrategy : this.sloMappingSpec.secondaryElasticityStrategy);
+    const sloMapping = this.sloMappingSpec;
+    const strategies = [sloMapping.elasticityStrategy, sloMapping.secondaryElasticityStrategy];
+    if (scaleDirection === 'UP') {
+      return await this.selectPriorityStrategy(strategies, scaleDirection);
+    } else {
+      return await this.selectPriorityStrategy(strategies.reverse(), scaleDirection);
+    }
+  }
+
+  private async selectPriorityStrategy(strategies: (HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind)[] , scaleDirection: ScaleDirection): Promise<HorizontalElasticityStrategyKind | VerticalElasticityStrategyKind> {
+    const strategyRequests = strategies.map(strat => this.scaleClient.isStrategyAvailable(strat, scaleDirection));
+    const strategyResults = await Promise.all(strategyRequests);
+    const available = strategyResults.findIndex(x => x === true);
+    if (available === -1) {
+      return strategies[0];
+    } else {
+      return strategies[available];
+    }
   }
 
   configure(
