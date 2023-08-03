@@ -1,5 +1,6 @@
 # Builder stage
 FROM node:18-alpine3.17 AS builder
+RUN apk add g++ make py3-pip
 WORKDIR /usr/src/polaris
 
 ARG POLARIS_APP_TYPE
