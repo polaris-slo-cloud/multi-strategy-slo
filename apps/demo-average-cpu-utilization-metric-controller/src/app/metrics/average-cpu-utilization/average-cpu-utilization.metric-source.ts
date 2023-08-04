@@ -1,4 +1,11 @@
-import {ComposedMetricSourceBase, LabelFilters, MetricsSource, OrchestratorGateway, Sample,} from '@polaris-sloc/core';
+import {
+  ComposedMetricSourceBase,
+  Join,
+  LabelFilters,
+  MetricsSource,
+  OrchestratorGateway,
+  Sample,
+} from '@polaris-sloc/core';
 import {AverageCpuUtilization, AverageCpuUtilizationParams} from '@org/slos';
 import {Observable} from 'rxjs';
 import {switchMap} from "rxjs/operators";
@@ -34,11 +41,18 @@ export class AverageCpuUtilizationMetricSource extends ComposedMetricSourceBase<
 
   private async getAvgCpuUtilization(): Promise<number> {
     const resourceFilter = LabelFilters.equal('resource', 'cpu');
+    const podFilter = LabelFilters.regex('pod', `${this.params.sloTarget.name}.*`);
+
+    const runningStatus = this.metricsSource.getTimeSeriesSource()
+      .select<number>('kube', 'pod_status_phase')
+      .filterOnLabel(podFilter)
+      .filterOnLabel(LabelFilters.equal('phase', 'Running'));
 
     const cpuLimit = this.metricsSource.getTimeSeriesSource()
       .select<number>('kube', 'pod_container_resource_limits')
-      .filterOnLabel(LabelFilters.regex('pod', `${this.params.sloTarget.name}.*`))
+      .filterOnLabel(podFilter)
       .filterOnLabel(resourceFilter)
+      .multiplyBy(runningStatus, Join.onLabels('namespace', 'pod').groupLeft())
       .sumByGroup();
 
     const cpuMillis = this.metricsSource.getTimeSeriesSource()
