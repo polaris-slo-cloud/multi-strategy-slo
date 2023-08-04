@@ -33,6 +33,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+__pycache__
 
 # System Files
 .DS_Store
