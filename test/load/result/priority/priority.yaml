@@ -17,7 +17,7 @@ spec:
   elasticityDecisionLogic:
     kind: PriorityDecisionLogic
     maxResources:
-      milliCpu: 1000
+      milliCpu: 1500
       memoryMiB: 100
     minResources:
       milliCpu: 200
