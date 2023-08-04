@@ -42,18 +42,18 @@ export class AverageCpuUtilizationMetricSource extends ComposedMetricSourceBase<
   private async getAvgCpuUtilization(): Promise<number> {
     const resourceFilter = LabelFilters.equal('resource', 'cpu');
     const podFilter = LabelFilters.regex('pod', `${this.params.sloTarget.name}.*`);
+    const deploymentFilter = LabelFilters.equal('deployment', this.params.sloTarget.name);
 
-    const runningStatus = this.metricsSource.getTimeSeriesSource()
-      .select<number>('kube', 'pod_status_phase')
-      .filterOnLabel(podFilter)
-      .filterOnLabel(LabelFilters.equal('phase', 'Running'));
+    const replicas = this.metricsSource.getTimeSeriesSource()
+      .select<number>('kube', 'deployment_spec_replicas')
+      .filterOnLabel(deploymentFilter);
 
     const cpuLimit = this.metricsSource.getTimeSeriesSource()
       .select<number>('kube', 'pod_container_resource_limits')
       .filterOnLabel(podFilter)
       .filterOnLabel(resourceFilter)
-      .multiplyBy(runningStatus, Join.onLabels('namespace', 'pod').groupLeft())
-      .sumByGroup();
+      .minByGroup()
+      .multiplyBy(replicas);
 
     const cpuMillis = this.metricsSource.getTimeSeriesSource()
       .select<number>('polaris', 'composed_metrics_polaris_slo_cloud_github_io_v1_cpu_load')
