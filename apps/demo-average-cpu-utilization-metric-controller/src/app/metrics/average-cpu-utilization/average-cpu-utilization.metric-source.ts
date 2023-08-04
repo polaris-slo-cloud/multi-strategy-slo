@@ -46,7 +46,8 @@ export class AverageCpuUtilizationMetricSource extends ComposedMetricSourceBase<
 
     const replicas = this.metricsSource.getTimeSeriesSource()
       .select<number>('kube', 'deployment_spec_replicas')
-      .filterOnLabel(deploymentFilter);
+      .filterOnLabel(deploymentFilter)
+      .minByGroup();
 
     const cpuLimit = this.metricsSource.getTimeSeriesSource()
       .select<number>('kube', 'pod_container_resource_limits')
