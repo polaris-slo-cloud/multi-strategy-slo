@@ -130,15 +130,14 @@ def get_replica_count(deployment_name, start, end):
 
 
 def get_cpu_resource_req(deployment_name, start, end):
-	metric = f'sum(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}})'
+	metric = f'min(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*"}}) * min(kube_deployment_spec_replicas{{deployment="{deployment_name}"}})'
 	query = query_prometheus(metric, start, end)
 	result = extract_query_result(query)
 	return [[correct_time(sublist[0], start), float(sublist[1])] for sublist in result]
 
 
-
 def get_container_resource_req(deployment_name, start, end):
-	metric = f'sum(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}}) / count(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*", resource="cpu"}})'
+	metric = f'min(kube_pod_container_resource_limits{{pod=~"{deployment_name}.*"}})'
 	query = query_prometheus(metric, start, end)
 	result = extract_query_result(query)
 	return [[correct_time(sublist[0], start), float(sublist[1])] for sublist in result]
@@ -260,16 +259,16 @@ def plot_test_result(tested, start, end, scaling_actions):
 	fig, axs = plt.subplots(nrows=4, ncols=1, sharex=True)
 	cpu_usage = get_cpu_usage(start, end)
 	#plot_scaling_actions(axs[1], scaling_actions, start)
-	plot_samples(axs[0], cpu_usage, 'Actual', 'CPU Usage', 'Percent')
-	plot_samples(axs[0], [[int(sublist[0]), float(target_cpu_usage)] for sublist in cpu_usage], 'Target', 'CPU Usage', 'Percent')
+	plot_samples(axs[0], cpu_usage, 'Actual', 'Average CPU Usage Across All Replicas', 'Percent')
+	plot_samples(axs[0], [[int(sublist[0]), float(target_cpu_usage)] for sublist in cpu_usage], 'Target', 'Average CPU Usage Across All Replicas', 'Percent')
 
 	cpu_req = get_cpu_resource_req(deployment, start, end)
 	container_req = get_container_resource_req(deployment, start, end)
 	pod_count = get_replica_count(deployment, start, end)
 
-	plot_samples(axs[1], cpu_req, None, 'Workload CPU Request', 'Core')
-	plot_samples(axs[2], container_req, None, 'Container CPU Request', "Core")
-	plot_samples(axs[3], pod_count, None, 'Workload Size', 'Pod')
+	plot_samples(axs[1], cpu_req, None, 'Workload CPU Request', 'CPU Cores')
+	plot_samples(axs[2], container_req, None, 'Pod CPU Request', "CPU Cores")
+	plot_samples(axs[3], pod_count, None, 'Workload Size', 'Instances')
 	axs[0].legend(fontsize=5, ncols=2)
 	axs[3].set_xlabel('Time (sec)', fontsize=8, loc='center')
 	if tested.title is not None:
