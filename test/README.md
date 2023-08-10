@@ -14,48 +14,52 @@ Even though reproducibility is an important factor for testing, this approach do
 The tests presented in this document are executed using minikube with the following configuration:
 
 
-    minikube start --kubernetes-version=v1.27.3 --feature-gates=InPlacePodVerticalScaling=true --container-runtime=containerd
+    minikube start --kubernetes-version=v1.27.3
     minikube addons enable metrics-server
     minikube addons enable ingress
 
-All tests are carried out with the same `staticElasticityStrategyConfig`
+All base tests are carried out with the same `staticElasticityStrategyConfig`
 
     ...
     staticElasticityStrategyConfig:
       maxResources:
-        milliCpu: 200
+        milliCpu: 1000
         memoryMiB: 100
       minResources:
-        milliCpu: 50
+        milliCpu: 200
         memoryMiB: 50
       minReplicas: 1
-      maxReplicas: 5
+      maxReplicas: 10
 
-## Results
+
+## Applying Linearly Changing CPU Load
+
+![cpu-load.png](results%2Flinear%2Fcpu-load.png)
 
 ### Random Decision Logic
 
-TODO: describe strategies
-TODO: create chart from cpu load
-
-![random.png](result/linear/random.png)
+![random.png](results/linear/random.png)
 
 ### Round Robin Decision Logic
 
-![round.png](result/linear/round.png)
+![round.png](results/linear/round.png)
 
 ### Priority Decision Logic
 
-In this example the primary strategy is horizontal scaling, if the workload scale has reached limit the decision logic switches to the secondary strategy which is vertical scaling.
-It is clearly visible on the results that the SLO controller scales to workload up if the current utilization exceeds the target.
-Any scaling action is skipped if the current CPU usage hovers near the target CPU usage.
-
-![priority_dl.png](result/linear/priority.png)
+![priority_dl.png](results/linear/priority.png)
 
 ### Threshold Decision Logic
 
-![threshold.png](result/linear/threshold.png)
+![threshold.png](results/linear/threshold.png)
 
 ### Best-Fit Decision Logic
 
-![best-fit.png](result/linear/best-fit.png)
+![best-fit.png](results/linear/best-fit.png)
+
+### Horizontal Scaling
+
+![horizontal.png](results%2Flinear%2Fhorizontal.png)
+
+### Vertical Scaling
+
+![vertical.png](results%2Flinear%2Fvertical.png)
