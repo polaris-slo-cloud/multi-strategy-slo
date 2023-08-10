@@ -1,13 +1,25 @@
-# Load Testing
+# Testing Using Fake CPU Load
 
 This testing approach aims to show the effects of combinations of different elasticity strategies with custom decision logics.
-We use Kubernetes' [Resource Consumer](https://pkg.go.dev/k8s.io/kubernetes/test/images/resource-consumer) to generate CPU load on the target workload.
-The resource consumer is triggered by an HTTP request for a short duration to generate a predefined amount of CPU millis.
-In order to distribute this load over multiple instances of the target deployment, we send the HTTP requests 10 times per second.
+As reproducibility is an important factor, the test environment uses multiple controlled artificial metrics to provide a comparable base for different setups.
 
-The resulting charts should show that an elasticity strategies are used to establish compliance with the SLO.
-Individual test results can be then compared by the reader.
-Even though reproducibility is an important factor for testing, this approach does not allow testcases to be fully reproduced due to various reasons like I/O errors.
+First, a predefined list of CPU Load values defined in millis injected into the demo-cpu-load-metric-controller. The values are iterated over using them 45 seconds each.
+This metric is picked up by the demo-average-cpu-utilization-metric-controller which divides it by the target workload CPU.
+
+    Workload CPU Allocation
+      min(
+        kube_pod_container_resource_limits{pod=~"resource-consumer.*"}
+      ) * 
+      min(
+        kube_deployment_spec_replicas{deployment="resource-consumer"}
+      )
+
+    CPU Load
+      polaris_composed_metrics_polaris_slo_cloud_github_io_v1_cpu_load
+
+    CPU Usage Percent
+      CPU Load / Workload CPU Allocation * 100
+      = polaris_composed_metrics_polaris_slo_cloud_github_io_v1_average_cpu_utilization
 
 ## Configuration and Environment
 
@@ -41,7 +53,6 @@ All base tests are carried out with the same `staticElasticityStrategyConfig`
 | ![Horizontal Scaling](results/linear/horizontal.png) | ![Vertical Scaling](results/linear/vertical.png) |
 
 ## Sudden CPU Load Changes
-
 
 |                       **CPU Load**                        |                 **Best-fit Strategy**                 | 
 |:---------------------------------------------------------:|:-----------------------------------------------------:|
