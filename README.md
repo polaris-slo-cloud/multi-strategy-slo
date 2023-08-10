@@ -55,7 +55,7 @@ Get prometheus helm chart:
 
 On the microk8s cluster install prometheus stack in the monitoring namespace with custom values.yaml, that enables prometheus logging to stdout and restores some cadvisor metrics.
 
-    microk8s helm install prometheus prometheus-community/kube-prometheus-stack --values ./helm-values/prometheus-values.yaml -n monitoring
+    microk8s helm install prometheus prometheus-community/kube-prometheus-stack --values ./test/helm-values/prometheus-values.yaml -n monitoring
 
 Install all CRDs, then apply all manifest files using:
 
