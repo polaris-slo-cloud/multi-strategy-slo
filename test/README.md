@@ -34,7 +34,7 @@ All base tests are carried out with the same `staticElasticityStrategyConfig`
 
 ## Linear CPU Load Changes
 
-|                       CPU Load                       |                Best-fit strategy                 | 
+|                     **CPU Load**                     |              **Best-fit Strategy**               | 
 |:----------------------------------------------------:|:------------------------------------------------:|
 |   ![Linear CPU Load](results/linear/cpu-load.png)    |  ![Best-Fit Logic](results/linear/best-fit.png)  |
 |                **Horizontal Scaling**                |               **Vertical Scaling**               |
@@ -43,7 +43,7 @@ All base tests are carried out with the same `staticElasticityStrategyConfig`
 ## Sudden CPU Load Changes
 
 
-|                         CPU Load                          |                   Best-fit strategy                   | 
+|                       **CPU Load**                        |                 **Best-fit Strategy**                 | 
 |:---------------------------------------------------------:|:-----------------------------------------------------:|
 |   ![Sudden CPU Load](results/sudden_load/cpu-load.png)    |  ![Best-Fit Logic](results/sudden_load/best-fit.png)  |
 |                  **Horizontal Scaling**                   |                 **Vertical Scaling**                  |
