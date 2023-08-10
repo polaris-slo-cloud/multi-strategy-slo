@@ -51,7 +51,7 @@ def delete_from_paths(paths):
 
 
 def abs_path(file_list):
-	return [f'{os.path.dirname(os.path.abspath(__file__))}/{path}' for path in file_list]
+	return [f'{os.path.dirname(os.path.abspath(__file__))}/../manifests/{path}' for path in file_list]
 
 
 
@@ -348,3 +348,11 @@ def run_test(test, data):
 		cleanup_prometheus()
 		if proxy is not None:
 			proxy.kill()
+
+def test_runner(slo_test, data):
+	try:
+		run_test(slo_test, data)
+	except KeyboardInterrupt:
+		exit(1)
+	except Exception as e:
+		print(f'Exception on test: {e}')
