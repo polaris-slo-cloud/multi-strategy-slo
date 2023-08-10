@@ -13,7 +13,6 @@ Even though reproducibility is an important factor for testing, this approach do
 
 The tests presented in this document are executed using minikube with the following configuration:
 
-
     minikube start --kubernetes-version=v1.27.3
     minikube addons enable metrics-server
     minikube addons enable ingress
@@ -31,35 +30,21 @@ All base tests are carried out with the same `staticElasticityStrategyConfig`
       minReplicas: 1
       maxReplicas: 10
 
+# CPU Load Scaling Analysis
 
-## Applying Linearly Changing CPU Load
+## Linear CPU Load Changes
 
-![cpu-load.png](results%2Flinear%2Fcpu-load.png)
+|                       CPU Load                       |                Best-fit strategy                 | 
+|:----------------------------------------------------:|:------------------------------------------------:|
+|   ![Linear CPU Load](results/linear/cpu-load.png)    |  ![Best-Fit Logic](results/linear/best-fit.png)  |
+|                **Horizontal Scaling**                |               **Vertical Scaling**               |
+| ![Horizontal Scaling](results/linear/horizontal.png) | ![Vertical Scaling](results/linear/vertical.png) |
 
-### Random Decision Logic
+## Sudden CPU Load Changes
 
-![random.png](results/linear/random.png)
 
-### Round Robin Decision Logic
-
-![round.png](results/linear/round.png)
-
-### Priority Decision Logic
-
-![priority_dl.png](results/linear/priority.png)
-
-### Threshold Decision Logic
-
-![threshold.png](results/linear/threshold.png)
-
-### Best-Fit Decision Logic
-
-![best-fit.png](results/linear/best-fit.png)
-
-### Horizontal Scaling
-
-![horizontal.png](results%2Flinear%2Fhorizontal.png)
-
-### Vertical Scaling
-
-![vertical.png](results%2Flinear%2Fvertical.png)
+|                         CPU Load                          |                   Best-fit strategy                   | 
+|:---------------------------------------------------------:|:-----------------------------------------------------:|
+|   ![Sudden CPU Load](results/sudden_load/cpu-load.png)    |  ![Best-Fit Logic](results/sudden_load/best-fit.png)  |
+|                  **Horizontal Scaling**                   |                 **Vertical Scaling**                  |
+| ![Horizontal Scaling](results/sudden_load/horizontal.png) | ![Vertical Scaling](results/sudden_load/vertical.png) |
