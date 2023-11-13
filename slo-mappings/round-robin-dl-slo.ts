@@ -1,7 +1,6 @@
 import {ApiObjectMetadata, SloTarget} from '@polaris-sloc/core';
-import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec} from '@org/slos';
+import {CpuUtilizationSloMapping, CpuUtilizationSloMappingSpec, RoundRobinDecisionLogic} from '@org/slos';
 import {HorizontalElasticityStrategyKind, VerticalElasticityStrategyKind} from '@polaris-sloc/common-mappings';
-import {RoundRobinDecisionLogic} from "../libs/slos/src/lib/slo-mappings/decision-logic/round-robin.edl";
 
 export default new CpuUtilizationSloMapping({
   metadata: new ApiObjectMetadata({
